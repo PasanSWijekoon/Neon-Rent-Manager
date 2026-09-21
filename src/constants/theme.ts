@@ -1,65 +1,27 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
+export const colors = {
+  primary: '#4D8BFF',
+  deepBlue: '#1E40AF',
+  darkNavy: '#0D132B',
+  lightBlue: '#60A5FA',
+  success: '#21C16B',
+  warning: '#FFC800',
+  error: '#FF4D4F',
+  info: '#3B82F6',
+  purple: '#7C3AED',
+  textPrimary: '#0D132B',
+  textSecondary: '#6B7280',
+  border: '#E5E7EB',
+  surface: '#F6F7FB',
+  background: '#FFFFFF',
+};
 
-import '@/global.css';
-
-import { Platform } from 'react-native';
-
-export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-  },
-} as const;
-
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
-
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
-});
-
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
-} as const;
-
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+export const typography = {
+  h1: 'text-[32px] font-poppins-bold text-text-primary',
+  h2: 'text-[24px] font-poppins-semibold text-text-primary',
+  h3: 'text-[20px] font-poppins-semibold text-text-primary',
+  h4: 'text-[16px] font-poppins-medium text-text-primary',
+  bodyL: 'text-[16px] font-poppins-regular text-text-primary',
+  bodyM: 'text-[14px] font-poppins-regular text-text-primary',
+  bodyS: 'text-[13px] font-poppins-regular text-text-secondary',
+  caption: 'text-[11px] font-poppins-regular text-text-secondary',
+};
