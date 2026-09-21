@@ -1,61 +1,82 @@
 import React from 'react';
-import { ScrollView, View, Text } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '@/components/ui/Card';
-import { typography } from '@/constants/theme';
+import { typography, colors } from '@/constants/theme';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function History() {
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 40 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+      <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 100 }}>
         
-        <View className="mb-8">
-          <Text className={`${typography.h2} text-text-primary`}>History</Text>
-          <Text className={`${typography.bodyM} text-text-secondary mt-1`}>All past transactions</Text>
+        <View className="flex-row justify-between items-start mb-8">
+          <View>
+            <Text className="text-slate-500 font-poppins-bold text-[10px] tracking-widest uppercase mb-0.5">Neon Rent Manager</Text>
+            <Text className="text-[#1E293B] font-poppins-bold text-3xl leading-tight">History</Text>
+            <Text className="text-slate-500 font-poppins-medium text-xs mt-0.5">Past transactions</Text>
+          </View>
+          
+          <View className="flex-row items-center mt-2.5">
+            <TouchableOpacity className="w-10 h-10 rounded-full bg-[#EFF6FF] items-center justify-center mr-2">
+              <Feather name="search" size={16} color="#334155" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              className="h-10 px-4 bg-primary rounded-full flex-row items-center justify-center"
+              style={{ shadowColor: '#3B82F6', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 }}
+            >
+              <Feather name="filter" size={16} color="#FFFFFF" />
+              <Text className="text-white font-poppins-semibold text-sm ml-1.5">Filter</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <Text className={`${typography.h4} text-text-secondary mb-4`}>August 2026</Text>
+        <Text className={`${typography.h3} text-[#1E293B] mb-4`}>September 2026</Text>
         
-        <Card className="mb-3">
-          <View className="flex-row justify-between items-center">
-            <View>
-              <Text className={`${typography.h4} text-text-primary`}>Raj Kumar</Text>
-              <Text className={`${typography.bodyS} text-text-secondary mt-1`}>Room A-01 • Aug 01, 2026</Text>
+        <Card className="mb-3 p-3.5 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
+          <View className="flex-row items-center flex-1">
+            <View className="w-11 h-11 rounded-full bg-emerald-100 items-center justify-center mr-3">
+              <Text className="text-emerald-600 font-poppins-semibold text-sm">AK</Text>
             </View>
-            <View className="items-end">
-              <Text className={`${typography.h4} text-text-primary mb-1`}>LKR 8,000</Text>
-              <StatusBadge status="paid" />
+            <View className="flex-1">
+              <Text className="text-[#1E293B] font-poppins-semibold text-sm mb-0.5">Ahmed Khan</Text>
+              <Text className="text-slate-400 font-poppins-medium text-xs">Shop 1</Text>
             </View>
           </View>
-        </Card>
-        
-        <Card className="mb-3">
-          <View className="flex-row justify-between items-center">
-            <View>
-              <Text className={`${typography.h4} text-text-primary`}>Ahmed Khan</Text>
-              <Text className={`${typography.bodyS} text-text-secondary mt-1`}>Shop 1 • Aug 05, 2026</Text>
+          
+          <View className="flex-row items-center">
+            <View className="items-end mr-3">
+              <Text className="text-[#1E293B] font-poppins-semibold text-[13px] mb-0.5">LKR 15,000</Text>
+              <Text className="text-slate-400 font-poppins-medium text-[10px]">Sep 10, 2026</Text>
             </View>
-            <View className="items-end">
-              <Text className={`${typography.h4} text-text-primary mb-1`}>LKR 15,000</Text>
-              <StatusBadge status="paid" />
-            </View>
+            <Feather name="chevron-right" size={16} color="#CBD5E1" />
           </View>
         </Card>
 
-        <Card className="mb-8">
-          <View className="flex-row justify-between items-center">
-            <View>
-              <Text className={`${typography.h4} text-text-primary`}>Ravi Kumar</Text>
-              <Text className={`${typography.bodyS} text-text-secondary mt-1`}>Shop 2 • Aug 10, 2026</Text>
+        <Card className="mb-3 p-3.5 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
+          <View className="flex-row items-center flex-1">
+            <View className="w-11 h-11 rounded-full bg-blue-100 items-center justify-center mr-3">
+              <Text className="text-blue-500 font-poppins-semibold text-sm">NP</Text>
             </View>
-            <View className="items-end">
-              <Text className={`${typography.h4} text-text-primary mb-1`}>LKR 12,000</Text>
-              <StatusBadge status="paid" />
+            <View className="flex-1">
+              <Text className="text-[#1E293B] font-poppins-semibold text-sm mb-0.5">Nimal Perera</Text>
+              <Text className="text-slate-400 font-poppins-medium text-xs">Room B-02</Text>
             </View>
           </View>
+          
+          <View className="flex-row items-center">
+            <View className="items-end mr-3">
+              <Text className="text-[#1E293B] font-poppins-semibold text-[13px] mb-0.5">LKR 10,000</Text>
+              <Text className="text-slate-400 font-poppins-medium text-[10px]">Sep 05, 2026</Text>
+            </View>
+            <Feather name="chevron-right" size={16} color="#CBD5E1" />
+          </View>
         </Card>
+
       </ScrollView>
     </SafeAreaView>
   );
 }
+

@@ -969,6 +969,23 @@ For a new screen without an approved design, follow the established Neon Rent Ma
 
 ---
 
+## Standard List Card Pattern
+
+All list items (units, tenants, payments, history) MUST use the exact standardized card layout implemented in pp/(tabs)/index.tsx:
+
+1.  **Container:** <Card className="mb-3 p-3.5 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
+2.  **Left Block (Avatar + Info):** lex-row items-center flex-1
+3.  **Avatar:** w-11 h-11 rounded-full items-center justify-center mr-3. Use dynamic tinted backgrounds (g-blue-100, g-emerald-100, etc.) and bold text (	ext-sm) for initials or icons.
+4.  **Titles:** 	ext-[#1E293B] font-poppins-semibold text-sm mb-0.5
+5.  **Subtitles:** 	ext-slate-400 font-poppins-medium text-xs
+6.  **Right Block:** lex-row items-center
+7.  **Right Stack:** items-end mr-3 for amounts, dates, or badges.
+    *   **Amounts:** 	ext-[#1E293B] font-poppins-semibold text-[13px] mb-1.5 (or mb-0.5 if followed by text instead of pill)
+    *   **Dates:** 	ext-slate-400 font-poppins-medium text-[10px]
+8.  **Pill Badges:** Solid tinted background (g-[#FEF3C7]), tiny solid icon circle (w-4 h-4 rounded-full bg-[#F59E0B]), and text (	ext-[#D97706] font-poppins-semibold text-[8px] uppercase). Uses MaterialCommunityIcons (e.g. clock-outline, exclamation-thick).
+9.  **Chevron:** <Feather name="chevron-right" size={16} color="#CBD5E1" /> at the far right.
+
+
 # Styling Rules
 
 Use NativeWind classes as the default styling mechanism.
@@ -1673,3 +1690,5 @@ Before every feature implementation:
 - Preserve offline functionality.
 - Replicate approved UI designs accurately.
 - Verify before moving to the next feature.
+
+

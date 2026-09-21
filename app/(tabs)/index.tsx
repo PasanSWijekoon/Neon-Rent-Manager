@@ -1,109 +1,273 @@
 import React from 'react';
-import { ScrollView, View, Text } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import { typography } from '@/constants/theme';
+import { StatusBadge, BadgeStatus } from '@/components/ui/StatusBadge';
+import { typography, colors } from '@/constants/theme';
 import { AppLogo } from '@/components/ui/AppLogo';
+import { mockDashboard } from '@/data/mockDashboard';
 
 export default function Home() {
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 40 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+      <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
         
-        <View className="flex-row items-center justify-between mb-8">
-          <View>
-            <Text className={`${typography.h2} text-text-primary`}>Neon Rent Manager</Text>
-            <Text className={`${typography.bodyL} text-text-secondary mt-1`}>September 2026</Text>
+        {/* Header */}
+        <View className="flex-row items-center justify-between mb-6">
+          <View className="flex-1">
+            <Text className={`${typography.caption} text-text-secondary uppercase tracking-widest font-poppins-semibold`}>
+              Neon Rent Manager
+            </Text>
+            <Text className="text-[22px] font-poppins-bold text-text-primary mt-1" numberOfLines={1} adjustsFontSizeToFit>
+              Good Morning, Pasan 👋
+            </Text>
+            <Text className={`${typography.bodyM} text-text-secondary mt-1`}>
+              {"Here's your rental overview for "}
+              <Text className="text-primary font-poppins-semibold">September 2026</Text>
+            </Text>
           </View>
-          <AppLogo size={48} />
+          <View className="flex-row items-center ml-4">
+            <TouchableOpacity className="relative mr-4 bg-white p-2 rounded-full shadow-sm">
+              <Feather name="bell" size={20} color={colors.textPrimary} />
+              <View className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-white" />
+            </TouchableOpacity>
+            <View className="bg-primary/10 rounded-xl overflow-hidden p-1">
+              <AppLogo size={42} />
+            </View>
+          </View>
         </View>
 
-        {/* Summary Cards */}
-        <View className="flex-row justify-between mb-4">
-          <Card className="flex-1 mr-2 bg-surface border-0">
-            <Text className={`${typography.caption} text-text-secondary uppercase mb-1`}>Expected</Text>
-            <Text className={`${typography.h3} text-dark-navy`}>LKR 139,000</Text>
+        {/* Hero Card */}
+        <View 
+          style={{
+            marginBottom: 24,
+            elevation: 12,
+            shadowColor: '#0F172A',
+            shadowOpacity: 0.3,
+            shadowRadius: 15,
+            shadowOffset: { width: 0, height: 8 },
+            borderRadius: 24,
+          }}
+        >
+          <LinearGradient
+            colors={['#0B132B', '#1E40AF', '#2563EB']}
+            start={{ x: 0, y: 0.2 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              borderRadius: 24,
+              padding: 20, // Reduced from 24
+              overflow: 'hidden',
+            }}
+          >
+            {/* Decorative Background Shapes for Depth */}
+            <View style={{ position: 'absolute', top: -40, right: -20, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+            <View style={{ position: 'absolute', bottom: -60, right: -30, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(96, 165, 250, 0.25)' }} />
+
+            <View className="flex-row justify-between items-start mb-5 relative z-10">
+              <View className="flex-row items-center">
+                <View className="w-10 h-10 bg-[#1E3A8A] rounded-full items-center justify-center mr-3 shadow-sm">
+                  <MaterialCommunityIcons name="database" size={20} color="#FFFFFF" />
+                </View>
+                <View>
+                  <Text className="text-white/80 font-poppins-medium text-xs mb-0.5">Total Collected</Text>
+                  <Text className="text-white font-poppins-bold text-2xl" style={{ textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 }}>
+                    LKR 116,000
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity className="bg-[#1E3A8A]/80 rounded-lg px-2.5 py-1.5 flex-row items-center border border-white/10 mt-1">
+                <Feather name="calendar" size={12} color="#FFFFFF" />
+                <Text className="text-white font-poppins-medium text-[10px] ml-1.5 mr-1">Sep 2026</Text>
+                <Feather name="chevron-down" size={12} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            
+            <View className="relative z-10">
+              <View className="flex-row justify-between mb-2.5 items-end">
+                <View className="flex-1 h-2.5 bg-[#1E3A8A] rounded-full overflow-hidden mr-4 mb-1">
+                  <LinearGradient
+                    colors={['#60A5FA', '#3B82F6', '#2563EB']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ width: '83.5%', height: '100%', borderRadius: 12 }}
+                  />
+                </View>
+                <View className="items-center">
+                  <Text className="text-white font-poppins-bold text-xs leading-tight">83.5%</Text>
+                  <Text className="text-white/70 font-poppins text-[8px] leading-tight">collected</Text>
+                </View>
+              </View>
+              
+              <View className="flex-row items-center">
+                <View className="w-5 h-5 rounded-full bg-[#064E3B] items-center justify-center mr-2">
+                  <Feather name="arrow-up" size={12} color="#34D399" />
+                </View>
+                <Text className="text-white/80 text-[10px] font-poppins">
+                  <Text className="text-[#34D399] font-poppins-semibold">+12%</Text> from last month
+                </Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* Financial Summary */}
+        <View className="flex-row justify-between mb-6">
+          <Card className="flex-1 mr-2 bg-surface border-0 rounded-2xl p-3.5 shadow-sm flex-row items-center">
+            <View className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center mr-3">
+              <Feather name="bar-chart-2" size={16} color={colors.primary} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-text-secondary font-poppins-medium text-[10px]">Expected</Text>
+              <Text className="text-text-primary font-poppins-semibold text-[13px]" numberOfLines={1} adjustsFontSizeToFit>LKR 139,000</Text>
+            </View>
           </Card>
-          <Card className="flex-1 ml-2 bg-surface border-0">
-            <Text className={`${typography.caption} text-text-secondary uppercase mb-1`}>Collected</Text>
-            <Text className={`${typography.h3} text-success`}>LKR 116,000</Text>
+          
+          <Card className="flex-1 ml-2 bg-surface border-0 rounded-2xl p-3.5 shadow-sm flex-row items-center">
+            <View className="w-9 h-9 rounded-full bg-error/10 items-center justify-center mr-3">
+              <Feather name="pie-chart" size={16} color={colors.error} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-text-secondary font-poppins-medium text-[10px]">Outstanding</Text>
+              <Text className="text-text-primary font-poppins-semibold text-[13px]" numberOfLines={1} adjustsFontSizeToFit>LKR 23,000</Text>
+            </View>
           </Card>
         </View>
-        <Card className="mb-8 bg-surface border-0">
-          <Text className={`${typography.caption} text-text-secondary uppercase mb-1`}>Outstanding</Text>
-          <Text className={`${typography.h2} text-error`}>LKR 23,000</Text>
-        </Card>
 
-        {/* Status Summary */}
-        <Text className={`${typography.h3} text-text-primary mb-4`}>Status Summary</Text>
-        <View className="flex-row justify-between px-2 mb-8">
-          <View className="items-center">
-            <Text className={`${typography.h2} text-success`}>8</Text>
-            <Text className={`${typography.bodyM} text-text-secondary mt-1`}>Paid</Text>
-          </View>
-          <View className="items-center">
-            <Text className={`${typography.h2} text-warning`}>2</Text>
-            <Text className={`${typography.bodyM} text-text-secondary mt-1`}>Due</Text>
-          </View>
-          <View className="items-center">
-            <Text className={`${typography.h2} text-error`}>3</Text>
-            <Text className={`${typography.bodyM} text-text-secondary mt-1`}>Overdue</Text>
-          </View>
+        {/* Payment Status */}
+        <View className="mb-4 flex-row justify-between items-center">
+          <Text className={`${typography.h2} text-text-primary font-poppins-bold`}>Payment Status</Text>
+          <TouchableOpacity>
+            <Text className="text-primary font-poppins-semibold text-xs">View All &gt;</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View className="flex-row justify-between mb-8">
+          <Card className="flex-1 p-2.5 bg-surface border-0 rounded-2xl shadow-sm mr-1.5 flex-row items-center">
+            <View className="w-8 h-8 rounded-full bg-success items-center justify-center mr-2 shadow-sm shadow-success/30">
+              <Feather name="check" size={14} color="#FFF" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">8</Text>
+              <Text className="text-text-secondary font-poppins text-xs leading-tight">Paid</Text>
+            </View>
+          </Card>
+          
+          <Card className="flex-1 p-2.5 bg-surface border-0 rounded-2xl shadow-sm mx-1.5 flex-row items-center">
+            <View className="w-8 h-8 rounded-full bg-warning items-center justify-center mr-2 shadow-sm shadow-warning/30">
+              <Feather name="clock" size={14} color="#FFF" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">2</Text>
+              <Text className="text-text-secondary font-poppins text-xs leading-tight">Due</Text>
+            </View>
+          </Card>
+
+          <Card className="flex-1 p-2.5 bg-surface border-0 rounded-2xl shadow-sm ml-1.5 flex-row items-center">
+            <View className="w-8 h-8 rounded-full bg-error items-center justify-center mr-2 shadow-sm shadow-error/30">
+              <Feather name="alert-circle" size={14} color="#FFF" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">3</Text>
+              <Text className="text-text-secondary font-poppins text-xs leading-tight" numberOfLines={1} adjustsFontSizeToFit>Overdue</Text>
+            </View>
+          </Card>
         </View>
 
         {/* Today's Due */}
-        <Text className={`${typography.h3} text-text-primary mb-4`}>{"Today's Due"}</Text>
-        <Card className="mb-3">
-          <View className="flex-row justify-between items-center">
-            <View>
-              <Text className={`${typography.h4} text-text-primary`}>Raj Kumar</Text>
-              <Text className={`${typography.bodyM} text-text-secondary`}>Room A-01</Text>
+        <View className="mb-4 flex-row justify-between items-center">
+          <Text className={`${typography.h2} text-[#1E293B] font-poppins-bold`}>Today's Due</Text>
+          <TouchableOpacity>
+            <Text className="text-primary font-poppins-medium text-xs">See All &gt;</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {[
+          { id: '1', name: 'Raj Kumar', room: 'Room A-01', amount: '8,000', status: 'DUE TODAY', type: 'warning', avatar: { bg: 'bg-blue-100', text: 'text-blue-500' } },
+          { id: '2', name: 'Ravi Kumar', room: 'Shop 2', amount: '12,000', status: '3 DAYS OVERDUE', type: 'error', avatar: { bg: 'bg-red-100', text: 'text-red-500' } }
+        ].map((item) => (
+          <Card key={item.id} className="mb-3 p-3.5 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1">
+              <View className={`w-11 h-11 rounded-full ${item.avatar.bg} items-center justify-center mr-3`}>
+                <Text className={`${item.avatar.text} font-poppins-semibold text-sm`}>
+                  {item.name.split(' ').map(n => n[0]).join('')}
+                </Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-[#1E293B] font-poppins-semibold text-sm mb-0.5">{item.name}</Text>
+                <Text className="text-slate-400 font-poppins-medium text-xs">{item.room}</Text>
+              </View>
             </View>
-            <View className="items-end">
-              <Text className={`${typography.h4} text-text-primary mb-1`}>LKR 8,000</Text>
-              <StatusBadge status="due" label="Due today" />
+            
+            <View className="flex-row items-center">
+              <View className="items-end mr-3">
+                <Text className="text-[#1E293B] font-poppins-semibold text-[13px] mb-1.5">
+                  LKR {item.amount}
+                </Text>
+                <View className={`flex-row items-center px-2 py-1 rounded-full ${item.type === 'warning' ? 'bg-[#FEF3C7]' : 'bg-[#FEE2E2]'}`}>
+                  <View className={`w-4 h-4 rounded-full items-center justify-center ${item.type === 'warning' ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}>
+                    {item.type === 'warning' ? (
+                      <Feather name="clock" size={10} color="#FFFFFF" />
+                    ) : (
+                      <MaterialCommunityIcons name="exclamation-thick" size={12} color="#FFFFFF" />
+                    )}
+                  </View>
+                  <Text className={`font-poppins-semibold text-[8px] ml-1.5 mr-1 uppercase ${item.type === 'warning' ? 'text-[#D97706]' : 'text-[#DC2626]'}`}>
+                    {item.status}
+                  </Text>
+                </View>
+              </View>
+              <Feather name="chevron-right" size={16} color="#CBD5E1" />
             </View>
-          </View>
-        </Card>
-        <Card className="mb-8">
-          <View className="flex-row justify-between items-center">
-            <View>
-              <Text className={`${typography.h4} text-text-primary`}>Ravi Kumar</Text>
-              <Text className={`${typography.bodyM} text-text-secondary`}>Shop 2</Text>
-            </View>
-            <View className="items-end">
-              <Text className={`${typography.h4} text-text-primary mb-1`}>LKR 12,000</Text>
-              <StatusBadge status="overdue" />
-            </View>
-          </View>
-        </Card>
+          </Card>
+        ))}
 
         {/* Recent Payments */}
-        <Text className={`${typography.h3} text-text-primary mb-4`}>Recent Payments</Text>
-        <Card className="mb-3">
-          <View className="flex-row justify-between items-center">
-            <View>
-              <Text className={`${typography.h4} text-text-primary`}>Raj Kumar</Text>
+        <View className="mb-4 mt-2 flex-row justify-between items-center">
+          <Text className={`${typography.h2} text-[#1E293B] font-poppins-bold`}>Recent Payments</Text>
+          <TouchableOpacity>
+            <Text className="text-primary font-poppins-medium text-xs">See All &gt;</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {[
+          { id: '3', name: 'Nimal Silva', room: 'Room B-02', amount: '10,000', date: 'Sep 20, 2026', avatar: { bg: 'bg-emerald-100', text: 'text-emerald-600' } },
+          { id: '4', name: 'Sunil Perera', room: 'Shop 1', amount: '25,000', date: 'Sep 19, 2026', avatar: { bg: 'bg-purple-100', text: 'text-purple-600' } }
+        ].map((item) => (
+          <Card key={item.id} className="mb-3 p-3.5 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1">
+              <View className={`w-11 h-11 rounded-full ${item.avatar.bg} items-center justify-center mr-3`}>
+                <Text className={`${item.avatar.text} font-poppins-semibold text-sm`}>
+                  {item.name.split(' ').map(n => n[0]).join('')}
+                </Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-[#1E293B] font-poppins-semibold text-sm mb-0.5">{item.name}</Text>
+                <Text className="text-slate-400 font-poppins-medium text-xs">{item.room}</Text>
+              </View>
             </View>
-            <View className="items-end">
-              <Text className={`${typography.h4} text-text-primary mb-1`}>LKR 8,000</Text>
-              <StatusBadge status="paid" />
+            
+            <View className="flex-row items-center">
+              <View className="items-end mr-3">
+                <Text className="text-[#1E293B] font-poppins-semibold text-[13px] mb-0.5">
+                  LKR {item.amount}
+                </Text>
+                <Text className="text-slate-400 font-poppins-medium text-[10px]">
+                  {item.date}
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={16} color="#CBD5E1" />
             </View>
-          </View>
-        </Card>
-        <Card className="mb-3">
-          <View className="flex-row justify-between items-center">
-            <View>
-              <Text className={`${typography.h4} text-text-primary`}>Ahmed Khan</Text>
-            </View>
-            <View className="items-end">
-              <Text className={`${typography.h4} text-text-primary mb-1`}>LKR 15,000</Text>
-              <StatusBadge status="paid" />
-            </View>
-          </View>
-        </Card>
+          </Card>
+        ))}
+
       </ScrollView>
+
     </SafeAreaView>
   );
 }
+
+
+
+
