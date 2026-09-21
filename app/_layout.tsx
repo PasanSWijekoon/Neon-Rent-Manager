@@ -1,5 +1,6 @@
-import "../../global.css";
+import "../global.css";
 import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { 
@@ -32,8 +33,11 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-    </Stack>
+    <>
+      <StatusBar style="light" />
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </>
   );
 }
