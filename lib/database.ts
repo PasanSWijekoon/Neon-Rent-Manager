@@ -2,7 +2,7 @@ import * as SQLite from 'expo-sqlite';
 
 export const DB_NAME = 'neon-rent-manager.db';
 
-const CURRENT_SCHEMA_VERSION = 1;
+const CURRENT_SCHEMA_VERSION = 2;
 
 export async function initDatabase(db: SQLite.SQLiteDatabase) {
   // WIPE DATA block removed
@@ -46,6 +46,7 @@ export async function initDatabase(db: SQLite.SQLiteDatabase) {
         id TEXT PRIMARY KEY NOT NULL,
         name TEXT NOT NULL,
         phone TEXT,
+        address TEXT,
         notes TEXT,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL,
@@ -100,6 +101,15 @@ export async function initDatabase(db: SQLite.SQLiteDatabase) {
       );
     `);
     
-    await db.execAsync(`PRAGMA user_version = ${CURRENT_SCHEMA_VERSION}`);
+    await db.execAsync(`PRAGMA user_version = 1`);
+  }
+
+  if (currentDbVersion < 2) {
+    try {
+      await db.execAsync(`ALTER TABLE tenants ADD COLUMN address TEXT;`);
+    } catch (e) {
+      console.log('Column address already exists or error:', e);
+    }
+    await db.execAsync(`PRAGMA user_version = 2`);
   }
 }

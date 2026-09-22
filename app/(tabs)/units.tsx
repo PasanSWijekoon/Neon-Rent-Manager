@@ -58,29 +58,35 @@ export default function UnitsScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 140 }}>
         
-        <View className="flex-row justify-between items-start mb-8">
-          <View>
-            <Text className="text-slate-500 font-poppins-bold text-[10px] tracking-widest uppercase mb-0.5">Neon Rent Manager</Text>
-            <Text className="text-[#1E293B] font-poppins-bold text-3xl leading-tight">Units</Text>
-            <Text className="text-slate-500 font-poppins-medium text-xs mt-0.5">Manage your rooms and shops</Text>
-          </View>
+        <View className="mb-6">
+          <Text className="text-slate-500 font-poppins-bold text-[10px] tracking-widest uppercase mb-0.5">Neon Rent Manager</Text>
+          <Text className="text-[#1E293B] font-poppins-bold text-3xl leading-tight">Units</Text>
+          <Text className="text-slate-500 font-poppins-medium text-xs mt-0.5">Manage your rooms and shops</Text>
           
-          <View className="flex-row items-center mt-2.5">
+          <View className="flex-row items-center mt-5 flex-wrap gap-y-3">
             <TouchableOpacity 
-              className="h-10 px-3 bg-[#EFF6FF] rounded-full flex-row items-center justify-center mr-2"
-              onPress={() => router.push('/properties' as Href)}
-            >
-              <Feather name="home" size={14} color="#3B82F6" />
-              <Text className="text-[#3B82F6] font-poppins-semibold text-xs ml-1.5">Properties</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              className="h-10 px-4 bg-primary rounded-full flex-row items-center justify-center"
+              className="h-10 px-4 bg-primary rounded-full flex-row items-center justify-center mr-2"
               style={{ shadowColor: '#3B82F6', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 }}
               onPress={() => setSheetVisible(true)}
             >
               <Feather name="plus" size={16} color="#FFFFFF" />
               <Text className="text-white font-poppins-semibold text-sm ml-1.5">Add Unit</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              className="h-10 px-4 bg-[#EFF6FF] rounded-full flex-row items-center justify-center mr-2"
+              onPress={() => router.push('/tenants' as Href)}
+            >
+              <Feather name="users" size={14} color="#3B82F6" />
+              <Text className="text-[#3B82F6] font-poppins-semibold text-sm ml-1.5">Tenants</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              className="h-10 px-4 bg-[#EFF6FF] rounded-full flex-row items-center justify-center"
+              onPress={() => router.push('/properties' as Href)}
+            >
+              <Feather name="home" size={14} color="#3B82F6" />
+              <Text className="text-[#3B82F6] font-poppins-semibold text-sm ml-1.5">Properties</Text>
             </TouchableOpacity>
           </View>
         </View>

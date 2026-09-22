@@ -104,7 +104,7 @@ export default function NewUnitScreen() {
           <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4 h-14">
             <Feather name={icon} size={20} color="#94A3B8" className="mr-3" />
             <TextInput
-              className="flex-1 font-poppins-regular text-[#1E293B] h-full"
+              className="flex-1 font-poppins-regular text-[#1E293B] py-0"
               placeholder={type === 'shop' ? "e.g. Shop 1" : "e.g. Room 101"}
               placeholderTextColor="#94A3B8"
               value={name}

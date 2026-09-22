@@ -70,7 +70,7 @@ export default function NewPropertyScreen() {
           <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4 h-14">
             <Feather name="home" size={20} color="#94A3B8" className="mr-3" />
             <TextInput
-              className="flex-1 font-poppins-regular text-[#1E293B] h-full"
+              className="flex-1 font-poppins-regular text-[#1E293B] py-0"
               placeholder="e.g. Main Property"
               placeholderTextColor="#94A3B8"
               value={name}
@@ -84,7 +84,7 @@ export default function NewPropertyScreen() {
           <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4 h-14">
             <Feather name="map-pin" size={20} color="#94A3B8" className="mr-3" />
             <TextInput
-              className="flex-1 font-poppins-regular text-[#1E293B] h-full"
+              className="flex-1 font-poppins-regular text-[#1E293B] py-0"
               placeholder="e.g. Anuradhapura"
               placeholderTextColor="#94A3B8"
               value={address}

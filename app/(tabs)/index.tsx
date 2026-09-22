@@ -16,7 +16,6 @@ import { Card } from '@/components/ui/Card';
 import { StatusBadge, BadgeStatus } from '@/components/ui/StatusBadge';
 import { typography, colors } from '@/constants/theme';
 import { AppLogo } from '@/components/ui/AppLogo';
-import { mockDashboard } from '@/data/mockDashboard';
 import { useAuthStore } from '@/store/authStore';
 
 const { height, width } = Dimensions.get('window');

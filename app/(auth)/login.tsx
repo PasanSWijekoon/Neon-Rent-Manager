@@ -81,7 +81,7 @@ export default function LoginScreen() {
                 >
                   <Feather name="mail" size={20} color={emailFocused ? colors.primary : '#94A3B8'} style={{ marginRight: 12 }} />
                   <TextInput
-                    className="flex-1 font-poppins-regular text-[#1E293B] text-[15px] h-full"
+                    className="flex-1 font-poppins-regular text-[#1E293B] text-[15px] py-0"
                     style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
                     placeholder="admin@example.com"
                     placeholderTextColor="#94A3B8"
@@ -106,7 +106,7 @@ export default function LoginScreen() {
                 >
                   <Feather name="lock" size={20} color={passwordFocused ? colors.primary : '#94A3B8'} style={{ marginRight: 12 }} />
                   <TextInput
-                    className="flex-1 font-poppins-regular text-[#1E293B] text-[15px] h-full"
+                    className="flex-1 font-poppins-regular text-[#1E293B] text-[15px] py-0"
                     style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
                     placeholder="Enter your password"
                     placeholderTextColor="#94A3B8"

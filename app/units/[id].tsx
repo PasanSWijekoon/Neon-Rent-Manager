@@ -8,8 +8,15 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { colors } from '@/constants/theme';
 import { getUnitById, updateUnit } from '@/lib/repositories/units';
 import { getProperty } from '@/lib/repositories/properties';
+import { getContractsForUnit } from '@/lib/repositories/contracts';
+import { getTenant } from '@/lib/repositories/tenants';
 import { Unit, UnitStatus } from '@/types/unit';
 import { Property } from '@/types/property';
+import { Contract } from '@/types/contract';
+import { Tenant } from '@/types/tenant';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Href, useFocusEffect } from 'expo-router';
+import { Card } from '@/components/ui/Card';
 
 export default function EditUnitScreen() {
   const router = useRouter();
@@ -24,27 +31,41 @@ export default function EditUnitScreen() {
   const [name, setName] = useState('');
   const [status, setStatus] = useState<UnitStatus>('vacant');
 
-  useEffect(() => {
-    async function loadData() {
-      if (!id) return;
-      try {
-        const u = await getUnitById(db, id);
-        if (u) {
-          setUnit(u);
-          setName(u.name);
-          setStatus(u.status);
-          
-          const p = await getProperty(db, u.propertyId);
-          setProperty(p);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
+  const [contracts, setContracts] = useState<(Contract & { tenant: Tenant | null })[]>([]);
+
+  const loadData = React.useCallback(async () => {
+    if (!id) return;
+    try {
+      const u = await getUnitById(db, id);
+      if (u) {
+        setUnit(u);
+        setName(u.name);
+        setStatus(u.status);
+        
+        const p = await getProperty(db, u.propertyId);
+        setProperty(p);
+
+        const cons = await getContractsForUnit(db, u.id);
+        const consWithTenants = await Promise.all(
+          cons.map(async (c) => {
+            const t = await getTenant(db, c.tenantId);
+            return { ...c, tenant: t };
+          })
+        );
+        setContracts(consWithTenants);
       }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-    loadData();
   }, [id, db]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   const handleSave = async () => {
     if (!id) return;
@@ -135,7 +156,7 @@ export default function EditUnitScreen() {
           <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4 h-14">
             <Feather name="tag" size={20} color="#94A3B8" className="mr-3" />
             <TextInput
-              className="flex-1 font-poppins-regular text-[#1E293B] h-full"
+              className="flex-1 font-poppins-regular text-[#1E293B] py-0"
               placeholder="e.g. Room 101"
               placeholderTextColor="#94A3B8"
               value={name}
@@ -168,6 +189,65 @@ export default function EditUnitScreen() {
           onPress={handleSave} 
           loading={saving} 
         />
+
+        <View className="mt-8 mb-4 flex-row items-center justify-between">
+          <Text className="font-poppins-bold text-lg text-[#1E293B]">Contracts</Text>
+          <TouchableOpacity 
+            className="bg-blue-50 px-3 py-1.5 rounded-full"
+            onPress={() => router.push(`/contracts/new?unitId=${unit.id}` as Href)}
+          >
+            <Text className="text-blue-600 font-poppins-medium text-sm">+ Add</Text>
+          </TouchableOpacity>
+        </View>
+
+        {contracts.length === 0 ? (
+          <View className="bg-slate-50 rounded-2xl p-4 border border-slate-100 items-center justify-center mb-8">
+            <Text className="font-poppins-medium text-sm text-slate-500 mb-2">No contracts yet</Text>
+            <PrimaryButton 
+              title="Add Contract" 
+              onPress={() => router.push(`/contracts/new?unitId=${unit.id}` as Href)} 
+            />
+          </View>
+        ) : (
+          <View className="mb-8">
+            {contracts.map(c => {
+              const isActive = c.status === 'active';
+              return (
+                <TouchableOpacity key={c.id} onPress={() => router.push(`/contracts/${c.id}` as Href)}>
+                  <Card className={`mb-3 p-3.5 border-0 rounded-2xl shadow-sm flex-row items-center justify-between ${isActive ? 'bg-blue-50 border border-blue-100' : 'bg-surface'}`}>
+                    <View className="flex-row items-center flex-1">
+                      <View className={`w-11 h-11 rounded-full items-center justify-center mr-3 ${isActive ? 'bg-blue-100' : 'bg-slate-100'}`}>
+                        <Feather name="file-text" size={18} color={isActive ? '#3B82F6' : '#64748B'} />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-[#1E293B] font-poppins-semibold text-sm mb-0.5">
+                          {c.tenant?.name || 'Unknown Tenant'}
+                        </Text>
+                        <Text className="text-slate-400 font-poppins-medium text-xs">
+                          {new Date(c.startDate).toLocaleDateString()} – {c.endDate ? new Date(c.endDate).toLocaleDateString() : 'Ongoing'}
+                        </Text>
+                      </View>
+                    </View>
+                    <View className="flex-row items-center">
+                      <View className="items-end mr-3">
+                        <Text className={`font-poppins-bold text-[13px] text-[#1E293B] mb-0.5`}>
+                          LKR {c.monthlyRent.toLocaleString()}
+                        </Text>
+                        <View className={`${isActive ? 'bg-blue-200' : 'bg-slate-100'} px-1.5 rounded-sm`}>
+                          <Text className={`font-poppins-semibold text-[8px] uppercase ${isActive ? 'text-blue-700' : 'text-slate-500'}`}>
+                            {isActive ? 'Current' : c.status}
+                          </Text>
+                        </View>
+                      </View>
+                      <Feather name="chevron-right" size={16} color="#CBD5E1" />
+                    </View>
+                  </Card>
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+        )}
+        <View className="h-10" />
       </ScrollView>
     </SafeAreaView>
   );
