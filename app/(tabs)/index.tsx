@@ -1,18 +1,104 @@
-import React from 'react';
-import { ScrollView, View, Text, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import Animated, { 
+  FadeIn, 
+  FadeOut, 
+  SlideOutUp, 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  withTiming 
+} from 'react-native-reanimated';
 import { Card } from '@/components/ui/Card';
 import { StatusBadge, BadgeStatus } from '@/components/ui/StatusBadge';
 import { typography, colors } from '@/constants/theme';
 import { AppLogo } from '@/components/ui/AppLogo';
 import { mockDashboard } from '@/data/mockDashboard';
+import { useAuthStore } from '@/store/authStore';
+
+const { height, width } = Dimensions.get('window');
+
+function RocketTransitionOverlay({ onComplete }: { onComplete: () => void }) {
+  const [phase, setPhase] = useState<'loading' | 'ready' | 'flying'>('loading');
+  const rocketY = useSharedValue(200); // Start below the screen
+  const rocketScale = useSharedValue(0.5);
+
+  useEffect(() => {
+    // 1. Loading phase (wait 1.2 seconds to simulate data loading)
+    const t1 = setTimeout(() => {
+      setPhase('ready');
+      rocketY.value = withSpring(0, { damping: 12, stiffness: 90 });
+      rocketScale.value = withSpring(1);
+    }, 1200);
+
+    // 2. Flying phase
+    const t2 = setTimeout(() => {
+      setPhase('flying');
+      rocketY.value = withTiming(-height, { duration: 800 });
+    }, 2500);
+
+    // 3. Complete (overlay slides up)
+    const t3 = setTimeout(() => {
+      onComplete();
+    }, 3200);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
+
+  const animatedRocketStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: rocketY.value },
+      { scale: rocketScale.value }
+    ]
+  }));
+
+  return (
+    <Animated.View 
+      entering={FadeIn.duration(300)}
+      exiting={SlideOutUp.duration(600).springify()}
+      style={[
+        StyleSheet.absoluteFill, 
+        { backgroundColor: colors.primary, zIndex: 1000, justifyContent: 'center', alignItems: 'center' }
+      ]}
+    >
+      {phase === 'loading' && (
+        <Animated.View entering={FadeIn} exiting={FadeOut} style={{ alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#FFFFFF" style={{ marginBottom: 24 }} />
+          <Text className="font-poppins-medium text-white text-lg">Generating Dashboard...</Text>
+          <Text className="font-poppins-regular text-blue-200 text-sm mt-2">Syncing your properties</Text>
+        </Animated.View>
+      )}
+
+      {(phase === 'ready' || phase === 'flying') && (
+        <Animated.View style={[{ alignItems: 'center', justifyContent: 'center' }, animatedRocketStyle]}>
+          <Text style={{ fontSize: 80, marginBottom: 16, textAlign: 'center' }}>🚀</Text>
+          <Animated.Text entering={FadeIn} className="font-poppins-bold text-white text-2xl text-center">
+            Ready to Go!
+          </Animated.Text>
+        </Animated.View>
+      )}
+    </Animated.View>
+  );
+}
 
 export default function Home() {
+  const { isNewLogin, setIsNewLogin } = useAuthStore();
+  const [showOverlay, setShowOverlay] = useState(isNewLogin);
+
+  const handleOverlayComplete = () => {
+    setShowOverlay(false);
+    setIsNewLogin(false); // Reset global flag so it doesn't happen on normal navigation
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
-      <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {showOverlay && <RocketTransitionOverlay onComplete={handleOverlayComplete} />}
+      
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
         
         {/* Header */}
         <View className="flex-row items-center justify-between mb-6">
@@ -21,7 +107,7 @@ export default function Home() {
               Neon Rent Manager
             </Text>
             <Text className="text-[22px] font-poppins-bold text-text-primary mt-1" numberOfLines={1} adjustsFontSizeToFit>
-              Good Morning, Pasan 👋
+              Good Morning, Admin
             </Text>
             <Text className={`${typography.bodyM} text-text-secondary mt-1`}>
               {"Here's your rental overview for "}
@@ -33,9 +119,14 @@ export default function Home() {
               <Feather name="bell" size={20} color={colors.textPrimary} />
               <View className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-white" />
             </TouchableOpacity>
-            <View className="bg-primary/10 rounded-xl overflow-hidden p-1">
+            <TouchableOpacity 
+              className="bg-primary/10 rounded-xl overflow-hidden p-1"
+              onPress={() => {
+                import('@/lib/auth').then(({ signOut }) => signOut());
+              }}
+            >
               <AppLogo size={42} />
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -177,7 +268,7 @@ export default function Home() {
 
         {/* Today's Due */}
         <View className="mb-4 flex-row justify-between items-center">
-          <Text className={`${typography.h2} text-[#1E293B] font-poppins-bold`}>Today's Due</Text>
+          <Text className={`${typography.h2} text-[#1E293B] font-poppins-bold`}>Today&apos;s Due</Text>
           <TouchableOpacity>
             <Text className="text-primary font-poppins-medium text-xs">See All &gt;</Text>
           </TouchableOpacity>
@@ -263,8 +354,8 @@ export default function Home() {
         ))}
 
       </ScrollView>
-
     </SafeAreaView>
+    </View>
   );
 }
 
