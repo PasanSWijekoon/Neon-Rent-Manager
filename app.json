@@ -11,6 +11,7 @@
       "icon": "./assets/images/logo.png"
     },
     "android": {
+      "package": "com.pasan.neonrentmanager",
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/images/logo.png"
@@ -42,6 +43,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "89b84683-2a5f-4ea0-aa0f-bf2231bfd0a2"
+      }
     }
   }
 }
