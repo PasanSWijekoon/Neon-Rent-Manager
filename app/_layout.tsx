@@ -15,6 +15,8 @@ import { observeAuthState } from '../lib/auth';
 import { useAuthStore } from '../store/authStore';
 import { SQLiteProvider } from 'expo-sqlite';
 import { initDatabase, DB_NAME } from '../lib/database';
+import { NavigationBar } from 'expo-navigation-bar';
+import { Platform } from 'react-native';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -55,8 +57,9 @@ export default function RootLayout() {
 
   return (
     <SQLiteProvider databaseName={DB_NAME} onInit={initDatabase}>
-      {/* @ts-ignore - expo-status-bar definitely supports backgroundColor on Android but the types might be missing in this exact version */}
+      {/* @ts-ignore */}
       <StatusBar style="light" backgroundColor="#000000" translucent={false} />
+      <NavigationBar style="dark" />
       <Stack screenOptions={{ 
         headerShown: false, 
         animation: 'none',
