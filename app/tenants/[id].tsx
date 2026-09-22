@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams, useFocusEffect, Href } from 'expo-router';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ import { getUnitById } from '@/lib/repositories/units';
 import { Tenant } from '@/types/tenant';
 import { Contract } from '@/types/contract';
 import { Unit } from '@/types/unit';
+import { generatePaymentReminder } from '@/lib/messageGenerator';
 
 export default function TenantDetailsScreen() {
   const router = useRouter();
@@ -66,6 +67,20 @@ export default function TenantDetailsScreen() {
       loadData();
     }, [loadData])
   );
+
+  const handleShare = async () => {
+    if (!tenant) return;
+    try {
+      const message = await generatePaymentReminder(db, tenant.id);
+      if (!message) {
+        Alert.alert('All Clear', 'There are no outstanding balances to send a reminder for.');
+        return;
+      }
+      await Share.share({ message });
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleArchive = async () => {
     const activeContract = contracts.find(c => c.status === 'active');
@@ -138,12 +153,21 @@ export default function TenantDetailsScreen() {
           </TouchableOpacity>
           <Text className="font-poppins-semibold text-lg text-[#1E293B]">Tenant Details</Text>
         </View>
-        <TouchableOpacity 
-          className="bg-slate-100 px-3 py-1.5 rounded-full"
-          onPress={() => router.push(`/tenants/edit?id=${tenant.id}` as Href)}
-        >
-          <Text className="text-slate-600 font-poppins-medium text-sm">Edit</Text>
-        </TouchableOpacity>
+        <View className="flex-row items-center">
+          <TouchableOpacity 
+            className="bg-blue-50 px-3 py-1.5 rounded-full flex-row items-center mr-2"
+            onPress={handleShare}
+          >
+            <Feather name="share-2" size={14} color="#2563EB" style={{ marginRight: 4 }} />
+            <Text className="text-blue-600 font-poppins-medium text-sm">Reminder</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            className="bg-slate-100 px-3 py-1.5 rounded-full"
+            onPress={() => router.push(`/tenants/edit?id=${tenant.id}` as Href)}
+          >
+            <Text className="text-slate-600 font-poppins-medium text-sm">Edit</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 100 }}>

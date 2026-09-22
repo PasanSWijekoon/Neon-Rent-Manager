@@ -128,7 +128,7 @@ export default function EditTenantScreen() {
             <Feather name="user" size={20} color="#94A3B8" className="mr-3" />
             <TextInput style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
               className="flex-1 font-poppins-regular text-[#1E293B] py-0"
-              placeholder="e.g. Ahmed"
+              placeholder="e.g. Pasan"
               placeholderTextColor="#94A3B8"
               value={name}
               onChangeText={setName}

@@ -1,6 +1,5 @@
 import "../global.css";
 import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { 
@@ -16,7 +15,7 @@ import { useAuthStore } from '../store/authStore';
 import { SQLiteProvider } from 'expo-sqlite';
 import { initDatabase, DB_NAME } from '../lib/database';
 import { NavigationBar } from 'expo-navigation-bar';
-import { Platform } from 'react-native';
+import { StatusBar, Platform } from 'react-native';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,6 +30,13 @@ export default function RootLayout() {
     });
     return unsubscribe;
   }, [setUser, setLoading]);
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      StatusBar.setBackgroundColor('#000000');
+      StatusBar.setBarStyle('light-content');
+    }
+  }, []);
 
   const [loaded, error] = useFonts({
     Poppins_400Regular,
@@ -57,8 +63,7 @@ export default function RootLayout() {
 
   return (
     <SQLiteProvider databaseName={DB_NAME} onInit={initDatabase}>
-      {/* @ts-ignore */}
-      <StatusBar style="light" backgroundColor="#000000" translucent={false} />
+      <StatusBar barStyle="light-content" backgroundColor="#000000" translucent={false} />
       <NavigationBar style="dark" />
       <Stack screenOptions={{ 
         headerShown: false, 

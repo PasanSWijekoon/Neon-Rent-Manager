@@ -44,8 +44,7 @@
       [
         "expo-status-bar",
         {
-          "style": "light",
-          "backgroundColor": "#000000"
+          "style": "light"
         }
       ],
       [

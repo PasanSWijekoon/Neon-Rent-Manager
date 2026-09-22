@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ScrollView, View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useFocusEffect, router } from 'expo-router';
 import Animated, { 
   FadeIn, 
   FadeOut, 
@@ -17,8 +18,26 @@ import { StatusBadge, BadgeStatus } from '@/components/ui/StatusBadge';
 import { typography, colors } from '@/constants/theme';
 import { AppLogo } from '@/components/ui/AppLogo';
 import { useAuthStore } from '@/store/authStore';
+import { useDashboard } from '@/hooks/useDashboard';
 
 const { height, width } = Dimensions.get('window');
+
+function formatLKR(amount: number) {
+  return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function getMonthName(monthNumber: number) {
+  const date = new Date();
+  date.setMonth(monthNumber - 1);
+  return date.toLocaleString('default', { month: 'long' });
+}
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good Morning';
+  if (hour < 17) return 'Good Afternoon';
+  return 'Good Evening';
+}
 
 function RocketTransitionOverlay({ onComplete }: { onComplete: () => void }) {
   const [phase, setPhase] = useState<'loading' | 'ready' | 'flying'>('loading');
@@ -87,6 +106,30 @@ export default function Home() {
   const { isNewLogin, setIsNewLogin } = useAuthStore();
   const [showOverlay, setShowOverlay] = useState(isNewLogin);
 
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1; // 1-indexed
+
+  const {
+    totalCollected,
+    expectedRent,
+    outstandingRent,
+    paidCount,
+    dueCount,
+    overdueCount,
+    collectionProgress,
+    monthOverMonthChange,
+    thisMonthDue,
+    recentPayments,
+    refresh
+  } = useDashboard(currentYear, currentMonth);
+
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
+
   const handleOverlayComplete = () => {
     setShowOverlay(false);
     setIsNewLogin(false); // Reset global flag so it doesn't happen on normal navigation
@@ -106,25 +149,34 @@ export default function Home() {
               Neon Rent Manager
             </Text>
             <Text className="text-[22px] font-poppins-bold text-text-primary mt-1" numberOfLines={1} adjustsFontSizeToFit>
-              Good Morning, Admin
+              {getGreeting()}, Admin
             </Text>
             <Text className={`${typography.bodyM} text-text-secondary mt-1`}>
-              {"Here's your rental overview for "}
-              <Text className="text-primary font-poppins-semibold">September 2026</Text>
+              Here's your rental overview for
+            </Text>
+            <Text className="text-primary font-poppins-semibold text-[15px] mt-0.5">
+              {getMonthName(currentMonth)} {currentYear}
             </Text>
           </View>
           <View className="flex-row items-center ml-4">
-            <TouchableOpacity className="relative mr-4 bg-white p-2 rounded-full shadow-sm">
-              <Feather name="bell" size={20} color={colors.textPrimary} />
-              <View className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-white" />
-            </TouchableOpacity>
             <TouchableOpacity 
-              className="bg-primary/10 rounded-xl overflow-hidden p-1"
-              onPress={() => {
-                import('@/lib/auth').then(({ signOut }) => signOut());
+              onPress={() => router.push('/settings')}
+              style={{
+                shadowColor: '#1E40AF',
+                shadowOpacity: 0.25,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 4
               }}
             >
-              <AppLogo size={42} />
+              <LinearGradient
+                colors={['#1E40AF', '#2563EB']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ padding: 12, borderRadius: 14 }}
+              >
+                <Feather name="menu" size={24} color="#FFFFFF" />
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         </View>
@@ -163,13 +215,13 @@ export default function Home() {
                 <View>
                   <Text className="text-white/80 font-poppins-medium text-xs mb-0.5">Total Collected</Text>
                   <Text className="text-white font-poppins-bold text-2xl" style={{ textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 }}>
-                    LKR 0
+                    LKR {formatLKR(totalCollected)}
                   </Text>
                 </View>
               </View>
               <TouchableOpacity className="bg-[#1E3A8A]/80 rounded-lg px-2.5 py-1.5 flex-row items-center border border-white/10 mt-1">
                 <Feather name="calendar" size={12} color="#FFFFFF" />
-                <Text className="text-white font-poppins-medium text-[10px] ml-1.5 mr-1">Sep 2026</Text>
+                <Text className="text-white font-poppins-medium text-[10px] ml-1.5 mr-1">{getMonthName(currentMonth).substring(0,3)} {currentYear}</Text>
                 <Feather name="chevron-down" size={12} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
@@ -181,21 +233,23 @@ export default function Home() {
                     colors={['#60A5FA', '#3B82F6', '#2563EB']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={{ width: '83.5%', height: '100%', borderRadius: 12 }}
+                    style={{ width: `${Math.min(collectionProgress, 100)}%`, height: '100%', borderRadius: 12 }}
                   />
                 </View>
                 <View className="items-center">
-                  <Text className="text-white font-poppins-bold text-xs leading-tight">83.5%</Text>
+                  <Text className="text-white font-poppins-bold text-xs leading-tight">{collectionProgress.toFixed(1)}%</Text>
                   <Text className="text-white/70 font-poppins text-[8px] leading-tight">collected</Text>
                 </View>
               </View>
               
               <View className="flex-row items-center">
-                <View className="w-5 h-5 rounded-full bg-[#064E3B] items-center justify-center mr-2">
-                  <Feather name="arrow-up" size={12} color="#34D399" />
+                <View className={`w-5 h-5 rounded-full ${monthOverMonthChange >= 0 ? 'bg-[#064E3B]' : 'bg-[#7F1D1D]'} items-center justify-center mr-2`}>
+                  <Feather name={monthOverMonthChange >= 0 ? "arrow-up" : "arrow-down"} size={12} color={monthOverMonthChange >= 0 ? "#34D399" : "#F87171"} />
                 </View>
                 <Text className="text-white/80 text-[10px] font-poppins">
-                  <Text className="text-[#34D399] font-poppins-semibold">+12%</Text> from last month
+                  <Text className={`${monthOverMonthChange >= 0 ? 'text-[#34D399]' : 'text-[#F87171]'} font-poppins-semibold`}>
+                    {monthOverMonthChange >= 0 ? '+' : ''}{monthOverMonthChange.toFixed(0)}%
+                  </Text> from last month
                 </Text>
               </View>
             </View>
@@ -210,7 +264,7 @@ export default function Home() {
             </View>
             <View className="flex-1">
               <Text className="text-text-secondary font-poppins-medium text-[10px]">Expected</Text>
-              <Text className="text-text-primary font-poppins-semibold text-[13px]" numberOfLines={1} adjustsFontSizeToFit>LKR 0</Text>
+              <Text className="text-text-primary font-poppins-semibold text-[13px]" numberOfLines={1} adjustsFontSizeToFit>LKR {formatLKR(expectedRent)}</Text>
             </View>
           </Card>
           
@@ -220,7 +274,7 @@ export default function Home() {
             </View>
             <View className="flex-1">
               <Text className="text-text-secondary font-poppins-medium text-[10px]">Outstanding</Text>
-              <Text className="text-text-primary font-poppins-semibold text-[13px]" numberOfLines={1} adjustsFontSizeToFit>LKR 0</Text>
+              <Text className="text-text-primary font-poppins-semibold text-[13px]" numberOfLines={1} adjustsFontSizeToFit>LKR {formatLKR(outstandingRent)}</Text>
             </View>
           </Card>
         </View>
@@ -228,7 +282,7 @@ export default function Home() {
         {/* Payment Status */}
         <View className="mb-4 flex-row justify-between items-center">
           <Text className={`${typography.h2} text-text-primary font-poppins-bold`}>Payment Status</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/payments')}>
             <Text className="text-primary font-poppins-semibold text-xs">View All &gt;</Text>
           </TouchableOpacity>
         </View>
@@ -239,7 +293,7 @@ export default function Home() {
               <Feather name="check" size={14} color="#FFF" />
             </View>
             <View className="flex-1">
-              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">0</Text>
+              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">{paidCount}</Text>
               <Text className="text-text-secondary font-poppins text-xs leading-tight">Paid</Text>
             </View>
           </Card>
@@ -249,7 +303,7 @@ export default function Home() {
               <Feather name="clock" size={14} color="#FFF" />
             </View>
             <View className="flex-1">
-              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">0</Text>
+              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">{dueCount}</Text>
               <Text className="text-text-secondary font-poppins text-xs leading-tight">Due</Text>
             </View>
           </Card>
@@ -259,24 +313,87 @@ export default function Home() {
               <Feather name="alert-circle" size={14} color="#FFF" />
             </View>
             <View className="flex-1">
-              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">0</Text>
+              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">{overdueCount}</Text>
               <Text className="text-text-secondary font-poppins text-xs leading-tight" numberOfLines={1} adjustsFontSizeToFit>Overdue</Text>
             </View>
           </Card>
         </View>
 
-        {/* Today's Due */}
+        {/* This Month's Due */}
         <View className="mb-4 flex-row justify-between items-center">
-          <Text className={`${typography.h2} text-[#1E293B] font-poppins-bold`}>Today&apos;s Due</Text>
+          <Text className={`${typography.h2} text-[#1E293B] font-poppins-bold`}>This Month&apos;s Due & Overdue</Text>
         </View>
         
-        <Text className="font-poppins-regular text-sm text-slate-500 mb-6 text-center mt-2">No payments due today.</Text>
+        {thisMonthDue.length === 0 ? (
+          <Text className="font-poppins-regular text-sm text-slate-500 mb-6 text-center mt-2">No pending payments.</Text>
+        ) : (
+          thisMonthDue.map((item) => (
+            <TouchableOpacity key={item.id} onPress={() => router.push(`/rent/${item.id}`)} activeOpacity={0.7}>
+              <Card className="mb-3 p-3.5 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
+                <View className="flex-row items-center flex-1">
+                  <View className="w-11 h-11 rounded-full items-center justify-center mr-3 bg-blue-100">
+                    <Text className="text-blue-600 font-poppins-bold text-sm">
+                      {item.tenantName.substring(0, 2).toUpperCase()}
+                    </Text>
+                  </View>
+                  <View>
+                    <Text className="text-[#1E293B] font-poppins-semibold text-sm mb-0.5">{item.tenantName}</Text>
+                    <Text className="text-slate-400 font-poppins-medium text-xs">{item.unitName}</Text>
+                  </View>
+                </View>
+                <View className="flex-row items-center">
+                  <View className="items-end mr-3">
+                    <Text className="text-[#1E293B] font-poppins-semibold text-[13px] mb-1.5">LKR {formatLKR(item.amountDue)}</Text>
+                    <View className={`rounded-full px-2 py-0.5 flex-row items-center ${item.status === 'overdue' ? 'bg-[#FEE2E2]' : 'bg-[#FEF3C7]'}`}>
+                      <MaterialCommunityIcons name={item.status === 'overdue' ? 'alert-circle-outline' : 'clock-outline'} size={10} color={item.status === 'overdue' ? '#DC2626' : '#D97706'} style={{ marginRight: 2 }} />
+                      <Text className={`font-poppins-semibold text-[8px] uppercase ${item.status === 'overdue' ? 'text-[#DC2626]' : 'text-[#D97706]'}`}>
+                        {item.status === 'overdue' ? 'OVERDUE' : 'DUE'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Feather name="chevron-right" size={16} color="#CBD5E1" />
+                </View>
+              </Card>
+            </TouchableOpacity>
+          ))
+        )}
 
         {/* Recent Payments */}
         <View className="mb-4 mt-2 flex-row justify-between items-center">
           <Text className={`${typography.h2} text-[#1E293B] font-poppins-bold`}>Recent Payments</Text>
         </View>
-        <Text className="font-poppins-regular text-sm text-slate-500 mb-6 text-center mt-2">No recent payments to display.</Text>
+        
+        {recentPayments.length === 0 ? (
+          <Text className="font-poppins-regular text-sm text-slate-500 mb-6 text-center mt-2">No recent payments to display.</Text>
+        ) : (
+          recentPayments.map((item) => {
+            const dateStr = new Date(item.paymentDate).toLocaleDateString();
+            return (
+              <TouchableOpacity key={item.id} onPress={() => router.push(`/rent/${item.rentPeriodId}`)} activeOpacity={0.7}>
+                <Card className="mb-3 p-3.5 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
+                  <View className="flex-row items-center flex-1">
+                    <View className="w-11 h-11 rounded-full items-center justify-center mr-3 bg-emerald-100">
+                      <Text className="text-emerald-600 font-poppins-bold text-sm">
+                        {item.tenantName.substring(0, 2).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text className="text-[#1E293B] font-poppins-semibold text-sm mb-0.5">{item.tenantName}</Text>
+                      <Text className="text-slate-400 font-poppins-medium text-xs">{item.unitName}</Text>
+                    </View>
+                  </View>
+                  <View className="flex-row items-center">
+                    <View className="items-end mr-3">
+                      <Text className="text-[#1E293B] font-poppins-semibold text-[13px] mb-0.5">LKR {formatLKR(item.amount)}</Text>
+                      <Text className="text-slate-400 font-poppins-medium text-[10px]">{dateStr}</Text>
+                    </View>
+                    <Feather name="chevron-right" size={16} color="#CBD5E1" />
+                  </View>
+                </Card>
+              </TouchableOpacity>
+            );
+          })
+        )}
 
       </ScrollView>
     </SafeAreaView>

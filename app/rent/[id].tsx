@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Share, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams, Href, useFocusEffect } from 'expo-router';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -17,6 +17,7 @@ import { Payment } from '@/types/payment';
 import { Tenant } from '@/types/tenant';
 import { Unit } from '@/types/unit';
 import { Contract } from '@/types/contract';
+import { generatePaymentReminder } from '@/lib/messageGenerator';
 
 export default function RentPeriodDetailsScreen() {
   const router = useRouter();
@@ -59,6 +60,20 @@ export default function RentPeriodDetailsScreen() {
       loadData();
     }, [loadData])
   );
+
+  const handleShare = async () => {
+    if (!tenant) return;
+    try {
+      const message = await generatePaymentReminder(db, tenant.id);
+      if (!message) {
+        Alert.alert('All Clear', 'There are no outstanding balances to send a reminder for.');
+        return;
+      }
+      await Share.share({ message });
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const getMonthName = (month: number) => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -109,6 +124,13 @@ export default function RentPeriodDetailsScreen() {
           </TouchableOpacity>
           <Text className="font-poppins-semibold text-lg text-[#1E293B]">Rent Details</Text>
         </View>
+        <TouchableOpacity 
+          className="bg-blue-50 px-3 py-1.5 rounded-full flex-row items-center"
+          onPress={handleShare}
+        >
+          <Feather name="share-2" size={14} color="#2563EB" style={{ marginRight: 4 }} />
+          <Text className="text-blue-600 font-poppins-medium text-sm">Send Reminder</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 100 }}>
