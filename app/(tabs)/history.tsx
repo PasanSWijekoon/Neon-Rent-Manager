@@ -9,7 +9,7 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 export default function History() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
-      <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 140 }}>
         
         <View className="flex-row justify-between items-start mb-8">
           <View>

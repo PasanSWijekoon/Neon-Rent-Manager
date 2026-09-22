@@ -164,7 +164,7 @@ export default function Home() {
                 <View>
                   <Text className="text-white/80 font-poppins-medium text-xs mb-0.5">Total Collected</Text>
                   <Text className="text-white font-poppins-bold text-2xl" style={{ textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 }}>
-                    LKR 116,000
+                    LKR 0
                   </Text>
                 </View>
               </View>
@@ -211,7 +211,7 @@ export default function Home() {
             </View>
             <View className="flex-1">
               <Text className="text-text-secondary font-poppins-medium text-[10px]">Expected</Text>
-              <Text className="text-text-primary font-poppins-semibold text-[13px]" numberOfLines={1} adjustsFontSizeToFit>LKR 139,000</Text>
+              <Text className="text-text-primary font-poppins-semibold text-[13px]" numberOfLines={1} adjustsFontSizeToFit>LKR 0</Text>
             </View>
           </Card>
           
@@ -221,7 +221,7 @@ export default function Home() {
             </View>
             <View className="flex-1">
               <Text className="text-text-secondary font-poppins-medium text-[10px]">Outstanding</Text>
-              <Text className="text-text-primary font-poppins-semibold text-[13px]" numberOfLines={1} adjustsFontSizeToFit>LKR 23,000</Text>
+              <Text className="text-text-primary font-poppins-semibold text-[13px]" numberOfLines={1} adjustsFontSizeToFit>LKR 0</Text>
             </View>
           </Card>
         </View>
@@ -240,7 +240,7 @@ export default function Home() {
               <Feather name="check" size={14} color="#FFF" />
             </View>
             <View className="flex-1">
-              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">8</Text>
+              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">0</Text>
               <Text className="text-text-secondary font-poppins text-xs leading-tight">Paid</Text>
             </View>
           </Card>
@@ -250,7 +250,7 @@ export default function Home() {
               <Feather name="clock" size={14} color="#FFF" />
             </View>
             <View className="flex-1">
-              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">2</Text>
+              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">0</Text>
               <Text className="text-text-secondary font-poppins text-xs leading-tight">Due</Text>
             </View>
           </Card>
@@ -260,7 +260,7 @@ export default function Home() {
               <Feather name="alert-circle" size={14} color="#FFF" />
             </View>
             <View className="flex-1">
-              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">3</Text>
+              <Text className="text-text-primary font-poppins-semibold text-xl leading-tight">0</Text>
               <Text className="text-text-secondary font-poppins text-xs leading-tight" numberOfLines={1} adjustsFontSizeToFit>Overdue</Text>
             </View>
           </Card>
@@ -269,89 +269,15 @@ export default function Home() {
         {/* Today's Due */}
         <View className="mb-4 flex-row justify-between items-center">
           <Text className={`${typography.h2} text-[#1E293B] font-poppins-bold`}>Today&apos;s Due</Text>
-          <TouchableOpacity>
-            <Text className="text-primary font-poppins-medium text-xs">See All &gt;</Text>
-          </TouchableOpacity>
         </View>
         
-        {[
-          { id: '1', name: 'Raj Kumar', room: 'Room A-01', amount: '8,000', status: 'DUE TODAY', type: 'warning', avatar: { bg: 'bg-blue-100', text: 'text-blue-500' } },
-          { id: '2', name: 'Ravi Kumar', room: 'Shop 2', amount: '12,000', status: '3 DAYS OVERDUE', type: 'error', avatar: { bg: 'bg-red-100', text: 'text-red-500' } }
-        ].map((item) => (
-          <Card key={item.id} className="mb-3 p-3.5 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
-            <View className="flex-row items-center flex-1">
-              <View className={`w-11 h-11 rounded-full ${item.avatar.bg} items-center justify-center mr-3`}>
-                <Text className={`${item.avatar.text} font-poppins-semibold text-sm`}>
-                  {item.name.split(' ').map(n => n[0]).join('')}
-                </Text>
-              </View>
-              <View className="flex-1">
-                <Text className="text-[#1E293B] font-poppins-semibold text-sm mb-0.5">{item.name}</Text>
-                <Text className="text-slate-400 font-poppins-medium text-xs">{item.room}</Text>
-              </View>
-            </View>
-            
-            <View className="flex-row items-center">
-              <View className="items-end mr-3">
-                <Text className="text-[#1E293B] font-poppins-semibold text-[13px] mb-1.5">
-                  LKR {item.amount}
-                </Text>
-                <View className={`flex-row items-center px-2 py-1 rounded-full ${item.type === 'warning' ? 'bg-[#FEF3C7]' : 'bg-[#FEE2E2]'}`}>
-                  <View className={`w-4 h-4 rounded-full items-center justify-center ${item.type === 'warning' ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}>
-                    {item.type === 'warning' ? (
-                      <Feather name="clock" size={10} color="#FFFFFF" />
-                    ) : (
-                      <MaterialCommunityIcons name="exclamation-thick" size={12} color="#FFFFFF" />
-                    )}
-                  </View>
-                  <Text className={`font-poppins-semibold text-[8px] ml-1.5 mr-1 uppercase ${item.type === 'warning' ? 'text-[#D97706]' : 'text-[#DC2626]'}`}>
-                    {item.status}
-                  </Text>
-                </View>
-              </View>
-              <Feather name="chevron-right" size={16} color="#CBD5E1" />
-            </View>
-          </Card>
-        ))}
+        <Text className="font-poppins-regular text-sm text-slate-500 mb-6 text-center mt-2">No payments due today.</Text>
 
         {/* Recent Payments */}
         <View className="mb-4 mt-2 flex-row justify-between items-center">
           <Text className={`${typography.h2} text-[#1E293B] font-poppins-bold`}>Recent Payments</Text>
-          <TouchableOpacity>
-            <Text className="text-primary font-poppins-medium text-xs">See All &gt;</Text>
-          </TouchableOpacity>
         </View>
-        
-        {[
-          { id: '3', name: 'Nimal Silva', room: 'Room B-02', amount: '10,000', date: 'Sep 20, 2026', avatar: { bg: 'bg-emerald-100', text: 'text-emerald-600' } },
-          { id: '4', name: 'Sunil Perera', room: 'Shop 1', amount: '25,000', date: 'Sep 19, 2026', avatar: { bg: 'bg-purple-100', text: 'text-purple-600' } }
-        ].map((item) => (
-          <Card key={item.id} className="mb-3 p-3.5 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
-            <View className="flex-row items-center flex-1">
-              <View className={`w-11 h-11 rounded-full ${item.avatar.bg} items-center justify-center mr-3`}>
-                <Text className={`${item.avatar.text} font-poppins-semibold text-sm`}>
-                  {item.name.split(' ').map(n => n[0]).join('')}
-                </Text>
-              </View>
-              <View className="flex-1">
-                <Text className="text-[#1E293B] font-poppins-semibold text-sm mb-0.5">{item.name}</Text>
-                <Text className="text-slate-400 font-poppins-medium text-xs">{item.room}</Text>
-              </View>
-            </View>
-            
-            <View className="flex-row items-center">
-              <View className="items-end mr-3">
-                <Text className="text-[#1E293B] font-poppins-semibold text-[13px] mb-0.5">
-                  LKR {item.amount}
-                </Text>
-                <Text className="text-slate-400 font-poppins-medium text-[10px]">
-                  {item.date}
-                </Text>
-              </View>
-              <Feather name="chevron-right" size={16} color="#CBD5E1" />
-            </View>
-          </Card>
-        ))}
+        <Text className="font-poppins-regular text-sm text-slate-500 mb-6 text-center mt-2">No recent payments to display.</Text>
 
       </ScrollView>
     </SafeAreaView>

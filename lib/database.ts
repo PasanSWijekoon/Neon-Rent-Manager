@@ -5,6 +5,8 @@ export const DB_NAME = 'neon-rent-manager.db';
 const CURRENT_SCHEMA_VERSION = 1;
 
 export async function initDatabase(db: SQLite.SQLiteDatabase) {
+  // WIPE DATA block removed
+
   // Enforce foreign key constraints
   await db.execAsync('PRAGMA foreign_keys = ON;');
   
