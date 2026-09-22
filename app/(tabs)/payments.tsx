@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href, useFocusEffect } from 'expo-router';
 import { Card } from '@/components/ui/Card';
@@ -14,9 +14,14 @@ export default function Payments() {
   const router = useRouter();
   const db = useSQLiteContext();
   
+  const now = new Date();
+  const currentMonthStr = `${now.getFullYear()}-${now.getMonth() + 1}`;
+
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
   const [rentPeriods, setRentPeriods] = useState<RentPeriodWithDetails[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthStr);
+  const [isMonthModalVisible, setIsMonthModalVisible] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const loadData = useCallback(async () => {
     try {
@@ -65,6 +70,20 @@ export default function Payments() {
     );
   }
 
+  const uniqueMonths = Array.from(new Set([currentMonthStr, ...rentPeriods.map(p => `${p.periodYear}-${p.periodMonth}`)]))
+    .sort((a, b) => {
+      const [yearA, monthA] = a.split('-').map(Number);
+      const [yearB, monthB] = b.split('-').map(Number);
+      if (yearA !== yearB) return yearB - yearA;
+      return monthB - monthA;
+    });
+
+  const filteredPeriods = rentPeriods.filter(p => {
+    const isMonthMatch = `${p.periodYear}-${p.periodMonth}` === selectedMonth;
+    const isStatusMatch = statusFilter === 'all' || p.status === statusFilter;
+    return isMonthMatch && isStatusMatch;
+  });
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 140 }}>
@@ -75,20 +94,47 @@ export default function Payments() {
             <Text className="text-[#1E293B] font-poppins-bold text-3xl leading-tight">Payments</Text>
             <Text className="text-slate-500 font-poppins-medium text-xs mt-0.5">Record and track</Text>
           </View>
+          
+          <TouchableOpacity 
+            onPress={() => setIsMonthModalVisible(true)}
+            className="bg-white rounded-xl px-3 py-2 flex-row items-center border border-slate-200 mt-2 shadow-sm"
+          >
+            <Feather name="calendar" size={14} color="#1E293B" />
+            <Text className="text-[#1E293B] font-poppins-medium text-xs ml-2 mr-1">
+              {getMonthName(parseInt(selectedMonth.split('-')[1], 10))} {selectedMonth.split('-')[0]}
+            </Text>
+            <Feather name="chevron-down" size={14} color="#1E293B" />
+          </TouchableOpacity>
         </View>
 
-        <Text className={`${typography.h3} text-[#1E293B] mb-4`}>Rent Periods</Text>
+        <Text className={`${typography.h3} text-[#1E293B] mb-3`}>Rent Periods</Text>
         
-        {rentPeriods.length === 0 ? (
-          <View className="bg-slate-50 rounded-2xl p-6 border border-slate-100 items-center justify-center mt-4">
+        {rentPeriods.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
+            {['all', 'due', 'overdue', 'paid', 'partial', 'upcoming'].map(status => (
+              <TouchableOpacity 
+                key={status}
+                onPress={() => setStatusFilter(status)}
+                className={`px-4 py-1.5 rounded-full border mr-2 ${statusFilter === status ? 'bg-[#1E293B] border-[#1E293B]' : 'bg-white border-slate-200'}`}
+              >
+                <Text className={`font-poppins-medium text-xs capitalize ${statusFilter === status ? 'text-white' : 'text-slate-600'}`}>
+                  {status}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+        
+        {filteredPeriods.length === 0 ? (
+          <View className="bg-slate-50 rounded-2xl p-6 border border-slate-100 items-center justify-center mt-2">
             <Feather name="file-text" size={32} color="#94A3B8" className="mb-3" />
-            <Text className="font-poppins-semibold text-base text-[#1E293B] mb-1">No rent periods yet</Text>
+            <Text className="font-poppins-semibold text-base text-[#1E293B] mb-1">No rent periods</Text>
             <Text className="font-poppins-medium text-sm text-slate-500 text-center">
-              Rent periods will appear when active contracts have rental periods.
+              No periods found for the selected filter.
             </Text>
           </View>
         ) : (
-          rentPeriods.map(period => {
+          filteredPeriods.map(period => {
             const balance = period.amountDue - period.amountPaid;
             const isShop = period.unit?.type === 'shop';
             
@@ -160,6 +206,42 @@ export default function Payments() {
           })
         )}
       </ScrollView>
+
+      <Modal visible={isMonthModalVisible} transparent animationType="fade">
+        <View className="flex-1 bg-black/50 justify-center items-center px-4">
+          <View className="bg-white w-full rounded-3xl p-6">
+            <Text className="font-poppins-bold text-lg text-[#1E293B] mb-4">Select Month</Text>
+            <ScrollView style={{ maxHeight: 300 }}>
+              {uniqueMonths.map(m => {
+                const [y, mo] = m.split('-');
+                const label = `${getMonthName(parseInt(mo, 10))} ${y}`;
+                const isSelected = selectedMonth === m;
+                return (
+                  <TouchableOpacity 
+                    key={m}
+                    onPress={() => {
+                      setSelectedMonth(m);
+                      setIsMonthModalVisible(false);
+                    }}
+                    className={`flex-row justify-between items-center py-4 border-b border-slate-100 ${isSelected ? 'bg-blue-50/50 -mx-6 px-6' : ''}`}
+                  >
+                    <Text className={`font-poppins-medium text-base ${isSelected ? 'text-primary' : 'text-[#1E293B]'}`}>
+                      {label}
+                    </Text>
+                    {isSelected && <Feather name="check" size={20} color={colors.primary} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <TouchableOpacity 
+              onPress={() => setIsMonthModalVisible(false)}
+              className="mt-4 py-3 bg-slate-100 rounded-xl items-center"
+            >
+              <Text className="font-poppins-semibold text-slate-600">Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

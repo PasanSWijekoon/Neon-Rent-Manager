@@ -40,7 +40,6 @@ export async function updateRentPeriod(db: SQLite.SQLiteDatabase, id: string, da
 export async function generateRentPeriodsForContract(db: SQLite.SQLiteDatabase, contract: Contract): Promise<void> {
   const start = new Date(contract.startDate);
   const endLimit = new Date();
-  endLimit.setMonth(endLimit.getMonth() + 1); 
   
   let end = endLimit;
   if (contract.endDate) {

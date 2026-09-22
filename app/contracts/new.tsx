@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Modal } from 'react-native';
+import {  View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Modal , Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams, Href, useFocusEffect } from 'expo-router';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -28,13 +28,14 @@ export default function NewContractScreen() {
   
   const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState('');
+  const [dueDate, setDueDate] = useState('');
   const [rent, setRent] = useState('');
   const [notes, setNotes] = useState('');
 
   const [tenantSearch, setTenantSearch] = useState('');
   const [tenantModalVisible, setTenantModalVisible] = useState(false);
   
-  const [datePickerMode, setDatePickerMode] = useState<'start' | 'end' | null>(null);
+  const [datePickerMode, setDatePickerMode] = useState<'start' | 'end' | 'due' | null>(null);
 
   const onValueChange = (event: any, selectedDate?: Date) => {
     setDatePickerMode(null);
@@ -48,6 +49,8 @@ export default function NewContractScreen() {
         setStartDate(dateString);
       } else if (datePickerMode === 'end') {
         setEndDate(dateString);
+      } else if (datePickerMode === 'due') {
+        setDueDate(dateString);
       }
     }
   };
@@ -101,6 +104,10 @@ export default function NewContractScreen() {
       Alert.alert('Validation Error', 'Please enter a valid end date (YYYY-MM-DD).');
       return;
     }
+    if (!dueDate || !validateDate(dueDate)) {
+      Alert.alert('Validation Error', 'Please select a Rent Due Date.');
+      return;
+    }
     if (new Date(endDate) < new Date(startDate)) {
       Alert.alert('Validation Error', 'End date cannot be before start date.');
       return;
@@ -130,6 +137,7 @@ export default function NewContractScreen() {
               }
 
               const now = new Date().toISOString();
+              const dueDayNum = parseInt(dueDate.split('-')[2], 10);
               const newContract: Contract = {
                 id: Math.random().toString(36).substring(2, 10) + Date.now().toString(36),
                 unitId,
@@ -137,7 +145,7 @@ export default function NewContractScreen() {
                 startDate,
                 endDate,
                 monthlyRent: rentNum,
-                dueDay: 1, // Defaulting for now
+                dueDay: dueDayNum,
                 deposit: 0,
                 status: 'active',
                 notes: notes.trim() || null,
@@ -243,10 +251,26 @@ export default function NewContractScreen() {
         </View>
 
         <View className="mb-6">
+          <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Rent Due Date *</Text>
+          <TouchableOpacity 
+            className="flex-row items-center justify-between bg-white border border-slate-200 rounded-xl px-4 h-14"
+            onPress={() => setDatePickerMode('due')}
+          >
+            <View className="flex-row items-center">
+              <Feather name="calendar" size={20} color="#94A3B8" className="mr-3" />
+              <Text className={`font-poppins-regular ${dueDate ? 'text-[#1E293B]' : 'text-[#94A3B8]'}`}>
+                {dueDate ? `Day ${parseInt(dueDate.split('-')[2], 10)} of every month` : 'Select a date'}
+              </Text>
+            </View>
+            <Feather name="chevron-down" size={20} color="#94A3B8" />
+          </TouchableOpacity>
+        </View>
+
+        <View className="mb-6">
           <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Monthly Rent (LKR) *</Text>
           <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4 h-14">
             <Text className="font-poppins-semibold text-slate-400 mr-2">Rs.</Text>
-            <TextInput
+            <TextInput style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
               className="flex-1 font-poppins-semibold text-[#1E293B] py-0"
               placeholder="15000"
               placeholderTextColor="#94A3B8"
@@ -261,7 +285,7 @@ export default function NewContractScreen() {
           <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Notes (Optional)</Text>
           <View className="flex-row items-start bg-white border border-slate-200 rounded-xl px-4 py-3 min-h-[100px]">
             <Feather name="file-text" size={20} color="#94A3B8" className="mr-3 mt-1" />
-            <TextInput
+            <TextInput style={{ marginTop: Platform.OS === 'android' ? 4 : 0 }}
               className="py-0 flex-1 font-poppins-regular text-[#1E293B]"
               placeholder="Contract details..."
               placeholderTextColor="#94A3B8"
@@ -292,9 +316,9 @@ export default function NewContractScreen() {
 
             {tenants.length > 0 && (
               <View className="px-6 mb-4">
-                <View className="flex-row items-center bg-slate-50 border border-slate-200 rounded-xl px-4 h-12">
+                <View className="flex-row items-center bg-slate-50 border border-slate-200 rounded-xl px-4 h-14">
                   <Feather name="search" size={18} color="#94A3B8" className="mr-3" />
-                  <TextInput
+                  <TextInput style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
                     className="flex-1 font-poppins-regular text-[#1E293B] py-0"
                     placeholder="Search tenant by name..."
                     placeholderTextColor="#94A3B8"

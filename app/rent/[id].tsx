@@ -179,7 +179,7 @@ export default function RentPeriodDetailsScreen() {
             <Card key={p.id} className="mb-3 p-4 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
               <View className="flex-row items-center flex-1">
                 <View className="w-10 h-10 rounded-full bg-emerald-50 items-center justify-center mr-3">
-                  <Feather name="dollar-sign" size={18} color="#10B981" />
+                  <Text className="font-poppins-bold text-[#10B981] text-xs">Rs.</Text>
                 </View>
                 <View>
                   <Text className="font-poppins-semibold text-sm text-[#1E293B] mb-0.5">

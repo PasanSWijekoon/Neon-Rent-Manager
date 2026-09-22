@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import {  View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator , Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -126,7 +126,7 @@ export default function EditTenantScreen() {
           <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Tenant Name *</Text>
           <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4 h-14">
             <Feather name="user" size={20} color="#94A3B8" className="mr-3" />
-            <TextInput
+            <TextInput style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
               className="flex-1 font-poppins-regular text-[#1E293B] py-0"
               placeholder="e.g. Ahmed"
               placeholderTextColor="#94A3B8"
@@ -140,7 +140,7 @@ export default function EditTenantScreen() {
           <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Phone (Optional)</Text>
           <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4 h-14">
             <Feather name="phone" size={20} color="#94A3B8" className="mr-3" />
-            <TextInput
+            <TextInput style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
               className="flex-1 font-poppins-regular text-[#1E293B] py-0"
               placeholder="e.g. 071 234 5678"
               placeholderTextColor="#94A3B8"
@@ -156,7 +156,7 @@ export default function EditTenantScreen() {
           <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Address (Optional)</Text>
           <View className="flex-row items-start bg-white border border-slate-200 rounded-xl px-4 py-3 min-h-[80px]">
             <Feather name="map-pin" size={20} color="#94A3B8" className="mr-3 mt-1" />
-            <TextInput
+            <TextInput style={{ marginTop: Platform.OS === 'android' ? 4 : 0 }}
               className="py-0 flex-1 font-poppins-regular text-[#1E293B]"
               placeholder="Tenant's address"
               placeholderTextColor="#94A3B8"
@@ -171,7 +171,7 @@ export default function EditTenantScreen() {
           <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Notes (Optional)</Text>
           <View className="flex-row items-start bg-white border border-slate-200 rounded-xl px-4 py-3 min-h-[100px]">
             <Feather name="file-text" size={20} color="#94A3B8" className="mr-3 mt-1" />
-            <TextInput
+            <TextInput style={{ marginTop: Platform.OS === 'android' ? 4 : 0 }}
               className="py-0 flex-1 font-poppins-regular text-[#1E293B]"
               placeholder="Any extra details..."
               placeholderTextColor="#94A3B8"

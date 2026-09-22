@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import {  View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator , Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -137,8 +137,8 @@ export default function AddPaymentScreen() {
         <View className="mb-6">
           <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Amount (LKR) *</Text>
           <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4 h-14">
-            <Feather name="dollar-sign" size={20} color="#94A3B8" className="mr-3" />
-            <TextInput
+            <Text className="font-poppins-semibold text-slate-400 mr-2">Rs.</Text>
+            <TextInput style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
               className="flex-1 font-poppins-regular text-[#1E293B] py-0"
               placeholder="0"
               placeholderTextColor="#94A3B8"
@@ -167,10 +167,11 @@ export default function AddPaymentScreen() {
             value={paymentDate}
             mode="date"
             display="default"
-            onChange={(event, selectedDate) => {
+            onValueChange={(event, selectedDate) => {
               setShowDatePicker(false);
               if (selectedDate) setPaymentDate(selectedDate);
             }}
+            onDismiss={() => setShowDatePicker(false)}
           />
         )}
 
@@ -194,7 +195,7 @@ export default function AddPaymentScreen() {
         <View className="mb-8">
           <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Notes</Text>
           <View className="bg-white border border-slate-200 rounded-xl px-4 py-3 min-h-[100px]">
-            <TextInput
+            <TextInput style={{ marginTop: Platform.OS === 'android' ? 4 : 0 }}
               className="flex-1 font-poppins-regular text-[#1E293B] py-0"
               placeholder="Optional notes"
               placeholderTextColor="#94A3B8"

@@ -39,11 +39,19 @@ export default function TenantDetailsScreen() {
         );
         setContracts(consWithUnits);
 
-        const activeContract = cons.find(c => c.status === 'active');
-        if (activeContract) {
+        const activeCons = cons.filter(c => c.status === 'active');
+        if (activeCons.length > 0) {
           const { getRentPeriodsForContract } = require('@/lib/repositories/rentPeriods');
-          const periods = await getRentPeriodsForContract(db, activeContract.id);
-          setRentPeriods(periods.slice(0, 3));
+          let allPeriods: any[] = [];
+          for (const ac of activeCons) {
+            const periods = await getRentPeriodsForContract(db, ac.id);
+            allPeriods = [...allPeriods, ...periods];
+          }
+          allPeriods.sort((a, b) => {
+            if (a.periodYear !== b.periodYear) return b.periodYear - a.periodYear;
+            return b.periodMonth - a.periodMonth;
+          });
+          setRentPeriods(allPeriods.slice(0, 3));
         }
       }
     } catch (e) {
@@ -118,7 +126,7 @@ export default function TenantDetailsScreen() {
   }
 
   const isArchived = !!tenant.archivedAt;
-  const currentContract = contracts.find(c => c.status === 'active');
+  const activeContracts = contracts.filter(c => c.status === 'active');
   const historicalContracts = contracts.filter(c => c.status !== 'active');
 
   return (
@@ -180,33 +188,37 @@ export default function TenantDetailsScreen() {
           )}
         </View>
 
-        {/* Current Contract */}
-        <Text className="font-poppins-bold text-lg text-[#1E293B] mb-3">Current Contract</Text>
-        {currentContract ? (
-          <TouchableOpacity onPress={() => router.push(`/contracts/${currentContract.id}` as Href)}>
-            <Card className="mb-6 p-4 bg-surface border-0 rounded-2xl shadow-sm flex-row justify-between items-center">
-              <View className="flex-row items-center flex-1">
-                <View className="w-12 h-12 rounded-full bg-blue-50 items-center justify-center mr-3">
-                  <MaterialCommunityIcons name="file-document-outline" size={24} color="#3B82F6" />
-                </View>
-                <View className="flex-1">
-                  <Text className="font-poppins-semibold text-base text-[#1E293B] mb-0.5">
-                    {currentContract.unit?.name || 'Unknown Unit'}
-                  </Text>
-                  <Text className="font-poppins-medium text-xs text-slate-500 mb-1">
-                    {new Date(currentContract.startDate).toLocaleDateString()} – {currentContract.endDate ? new Date(currentContract.endDate).toLocaleDateString() : 'Ongoing'}
-                  </Text>
-                  <Text className="font-poppins-bold text-sm text-[#1E293B]">
-                    LKR {currentContract.monthlyRent.toLocaleString()} <Text className="font-poppins-medium text-xs text-slate-400">/ month</Text>
-                  </Text>
-                </View>
-              </View>
-              <Feather name="chevron-right" size={20} color="#CBD5E1" />
-            </Card>
-          </TouchableOpacity>
+        {/* Current Contracts */}
+        <Text className="font-poppins-bold text-lg text-[#1E293B] mb-3">Active Contracts</Text>
+        {activeContracts.length > 0 ? (
+          <View className="mb-6">
+            {activeContracts.map(contract => (
+              <TouchableOpacity key={contract.id} onPress={() => router.push(`/contracts/${contract.id}` as Href)}>
+                <Card className="mb-3 p-4 bg-surface border-0 rounded-2xl shadow-sm flex-row justify-between items-center">
+                  <View className="flex-row items-center flex-1">
+                    <View className={`w-12 h-12 rounded-full items-center justify-center mr-3 ${contract.unit?.type === 'shop' ? 'bg-purple-100' : 'bg-blue-50'}`}>
+                      <MaterialCommunityIcons name={contract.unit?.type === 'shop' ? 'briefcase-outline' : 'file-document-outline'} size={24} color={contract.unit?.type === 'shop' ? '#9333EA' : '#3B82F6'} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-poppins-semibold text-base text-[#1E293B] mb-0.5">
+                        {contract.unit?.name || 'Unknown Unit'}
+                      </Text>
+                      <Text className="font-poppins-medium text-xs text-slate-500 mb-1">
+                        {new Date(contract.startDate).toLocaleDateString()} — {contract.endDate ? new Date(contract.endDate).toLocaleDateString() : 'Ongoing'}
+                      </Text>
+                      <Text className="font-poppins-bold text-sm text-[#1E293B]">
+                        LKR {contract.monthlyRent.toLocaleString()} <Text className="font-poppins-medium text-xs text-slate-400">/ month</Text>
+                      </Text>
+                    </View>
+                  </View>
+                  <Feather name="chevron-right" size={20} color="#CBD5E1" />
+                </Card>
+              </TouchableOpacity>
+            ))}
+          </View>
         ) : (
           <View className="bg-slate-50 rounded-2xl p-4 border border-slate-100 items-center justify-center mb-6">
-            <Text className="font-poppins-medium text-sm text-slate-500">No active contract</Text>
+            <Text className="font-poppins-medium text-sm text-slate-500">No active contracts</Text>
           </View>
         )}
 

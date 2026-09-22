@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import {  View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator , Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -103,7 +103,7 @@ export default function NewUnitScreen() {
           <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Unit Name</Text>
           <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4 h-14">
             <Feather name={icon} size={20} color="#94A3B8" className="mr-3" />
-            <TextInput
+            <TextInput style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
               className="flex-1 font-poppins-regular text-[#1E293B] py-0"
               placeholder={type === 'shop' ? "e.g. Shop 1" : "e.g. Room 101"}
               placeholderTextColor="#94A3B8"
