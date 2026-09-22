@@ -33,6 +33,8 @@ export default function EditUnitScreen() {
 
   const [contracts, setContracts] = useState<(Contract & { tenant: Tenant | null })[]>([]);
 
+  const [rentPeriods, setRentPeriods] = useState<any[]>([]);
+
   const loadData = React.useCallback(async () => {
     if (!id) return;
     try {
@@ -53,6 +55,13 @@ export default function EditUnitScreen() {
           })
         );
         setContracts(consWithTenants);
+
+        const activeContract = cons.find(c => c.status === 'active');
+        if (activeContract) {
+          const { getRentPeriodsForContract } = require('@/lib/repositories/rentPeriods');
+          const periods = await getRentPeriodsForContract(db, activeContract.id);
+          setRentPeriods(periods.slice(0, 3)); // show top 3 recent
+        }
       }
     } catch (e) {
       console.error(e);
@@ -189,6 +198,41 @@ export default function EditUnitScreen() {
           onPress={handleSave} 
           loading={saving} 
         />
+
+        {rentPeriods.length > 0 && (
+          <View className="mt-8 mb-2">
+            <Text className="font-poppins-bold text-lg text-[#1E293B] mb-4">Recent Rent</Text>
+            {rentPeriods.map(rp => (
+              <TouchableOpacity key={rp.id} onPress={() => router.push(`/rent/${rp.id}` as Href)}>
+                <Card className="mb-3 p-3.5 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
+                  <View className="flex-row items-center flex-1">
+                    <View className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3">
+                      <MaterialCommunityIcons name="clock-outline" size={20} color="#3B82F6" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-poppins-semibold text-sm text-[#1E293B] mb-0.5">
+                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][rp.periodMonth - 1]} {rp.periodYear}
+                      </Text>
+                      <Text className="font-poppins-medium text-xs text-slate-400">
+                        Rent: LKR {rp.amountDue.toLocaleString()}
+                      </Text>
+                    </View>
+                  </View>
+                  <View className="items-end">
+                    <Text className="font-poppins-bold text-sm text-[#1E293B] mb-1">
+                      Bal: LKR {(rp.amountDue - rp.amountPaid).toLocaleString()}
+                    </Text>
+                    <View className="bg-slate-100 px-2 py-0.5 rounded-sm">
+                      <Text className="font-poppins-semibold text-[8px] uppercase text-slate-500">
+                        {rp.status.replace('_', ' ')}
+                      </Text>
+                    </View>
+                  </View>
+                </Card>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         <View className="mt-8 mb-4 flex-row items-center justify-between">
           <Text className="font-poppins-bold text-lg text-[#1E293B]">Contracts</Text>
