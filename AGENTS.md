@@ -927,22 +927,33 @@ Notification scheduling must account for:
 
 ---
 
-# SMS
+# Smart Reminders & Sharing
 
-V1 SMS functionality should use the Android SMS composer where practical.
+V1 messaging functionality uses the native React Native `Share` API to generate payment status summaries and pass them to the Android Share Sheet.
 
-The owner can review the message before sending it.
+The owner can review the message and choose their preferred delivery method (WhatsApp, SMS, Telegram, etc.) before sending it.
 
-Example:
+The reminder message must combine ALL outstanding balances (across all units) for a tenant into a single message. Example:
 
 ```txt
-Hi Raj, this is a reminder that your monthly rent
-of LKR 8,000 is due today. Thank you.
+Hello Pasan,
+
+This is a friendly reminder regarding your pending rent.
+
+Current Status:
+
+[Shop 1]
+- August 2026 (Overdue): LKR 15,000 remaining
+- September 2026 (Due): LKR 15,000 remaining
+
+------------------------
+Total Amount Due: LKR 30,000
+
+Please arrange payment at your earliest convenience. Thank you!
+- Neon Rent Manager
 ```
 
-Do not implement automated third-party SMS delivery without explicit scope approval.
-
-If an external SMS provider is later added, all credentials/tokens must remain server-side.
+Do not implement automated third-party delivery (e.g. Twilio) without explicit scope approval. All sharing must be initiated manually by the user via the Share Sheet.
 
 ---
 
