@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "neonrentmanager",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/images/logo.png"
     },
@@ -19,10 +19,6 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
-    },
-    "androidStatusBar": {
-      "barStyle": "light-content",
-      "backgroundColor": "#000000"
     },
     "web": {
       "output": "static",
@@ -44,13 +40,13 @@
       [
         "expo-status-bar",
         {
-          "style": "light"
+          "style": "auto"
         }
       ],
       [
         "expo-navigation-bar",
         {
-          "backgroundColor": "#000000"
+          "backgroundColor": "#F8FAFC"
         }
       ]
     ],
