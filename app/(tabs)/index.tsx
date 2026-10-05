@@ -103,7 +103,7 @@ function RocketTransitionOverlay({ onComplete }: { onComplete: () => void }) {
 }
 
 export default function Home() {
-  const { isNewLogin, setIsNewLogin } = useAuthStore();
+  const { user, isNewLogin, setIsNewLogin } = useAuthStore();
   const [showOverlay, setShowOverlay] = useState(isNewLogin);
 
   const today = new Date();
@@ -149,7 +149,7 @@ export default function Home() {
               Neon Rent Manager
             </Text>
             <Text className="text-[22px] font-poppins-bold text-text-primary mt-1" numberOfLines={1} adjustsFontSizeToFit>
-              {getGreeting()}, Admin
+              {getGreeting()}, {user?.displayName ? user.displayName.split(' ')[0] : 'Admin'}
             </Text>
             <Text className={`${typography.bodyM} text-text-secondary mt-1`}>
               Here's your rental overview for

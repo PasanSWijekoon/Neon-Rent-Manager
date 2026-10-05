@@ -88,6 +88,17 @@ export default function SettingsScreen() {
 
         <ScrollView className="flex-1 px-4 pt-4" showsVerticalScrollIndicator={false}>
           <Text className="font-poppins-semibold text-xs text-slate-400 uppercase tracking-wider mb-3 mt-2 ml-1">
+            Account
+          </Text>
+          
+          <SettingItem 
+            icon="user" 
+            title="Edit Profile" 
+            subtitle="Update name, contact & password"
+            onPress={() => router.push('/settings/profile' as any)}
+          />
+
+          <Text className="font-poppins-semibold text-xs text-slate-400 uppercase tracking-wider mb-3 mt-6 ml-1">
             Preferences
           </Text>
           
@@ -127,7 +138,7 @@ export default function SettingsScreen() {
           />
 
           <Text className="font-poppins-semibold text-xs text-slate-400 uppercase tracking-wider mb-3 mt-6 ml-1">
-            Account
+            Authentication
           </Text>
 
           <SettingItem 

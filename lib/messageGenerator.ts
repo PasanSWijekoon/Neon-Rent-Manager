@@ -60,9 +60,28 @@ export async function generatePaymentReminder(db: SQLiteDatabase, tenantId: stri
       message += `\n`;
     }
 
+    const { auth } = require('@/lib/firebase');
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    
+    let ownerName = 'Neon Rent Manager';
+    let ownerContact = '';
+
+    if (auth.currentUser?.displayName) {
+      ownerName = auth.currentUser.displayName;
+    }
+    
+    try {
+      if (auth.currentUser?.uid) {
+        const contact = await AsyncStorage.getItem(`@owner_contact_${auth.currentUser.uid}`);
+        if (contact) {
+          ownerContact = ` - ${contact}`;
+        }
+      }
+    } catch(e) {}
+
     message += `------------------------\n`;
     message += `Total Amount Due: LKR ${totalDue.toLocaleString()}\n\n`;
-    message += `Please arrange payment at your earliest convenience. Thank you!\n- Neon Rent Manager`;
+    message += `Please arrange payment at your earliest convenience. Thank you!\n- ${ownerName}${ownerContact}`;
 
     return message;
   } catch (error) {

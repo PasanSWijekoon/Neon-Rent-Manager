@@ -49,3 +49,28 @@ export async function signOut(): Promise<void> {
 export function observeAuthState(callback: (user: User | null) => void) {
   return onAuthStateChanged(auth, callback);
 }
+
+import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+
+export async function updateUserProfile(name: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('No user is currently signed in.');
+  await updateProfile(user, { displayName: name });
+}
+
+export async function changeUserPassword(currentPassword: string, newPassword: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user || !user.email) throw new Error('No user is currently signed in.');
+  
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+  
+  try {
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPassword);
+  } catch (error: any) {
+    if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      throw new Error('Current password is incorrect.');
+    }
+    throw new Error('Failed to update password. Please try again.');
+  }
+}
