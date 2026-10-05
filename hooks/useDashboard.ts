@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useSQLiteContext } from 'expo-sqlite';
 import { RentPeriod } from '@/types/rent';
+import { syncRentPeriodStatuses } from '@/lib/repositories/rentPeriods';
 
 export type DashboardRentPeriod = RentPeriod & { tenantName: string; unitName: string };
 export type DashboardPayment = {
@@ -31,6 +32,9 @@ export function useDashboard(year: number, month: number) {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
+      // Sync statuses based on current date before querying
+      await syncRentPeriodStatuses(db);
+
       // 1. Fetch rent periods for current year/month
       const rentPeriods = await db.getAllAsync<RentPeriod>(
         'SELECT * FROM rent_periods WHERE periodYear = ? AND periodMonth = ?',

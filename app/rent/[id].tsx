@@ -107,6 +107,8 @@ export default function RentPeriodDetailsScreen() {
   let statusBg = 'bg-slate-100';
   if (period.status === 'paid') {
     statusColor = 'text-emerald-700'; statusBg = 'bg-emerald-100';
+  } else if (period.status === 'upcoming') {
+    statusColor = 'text-emerald-700'; statusBg = 'bg-emerald-100';
   } else if (period.status === 'overdue') {
     statusColor = 'text-red-700'; statusBg = 'bg-red-100';
   } else if (period.status === 'partial') {

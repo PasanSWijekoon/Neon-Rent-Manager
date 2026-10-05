@@ -137,3 +137,14 @@ export async function getRentPeriodsWithDetails(db: SQLite.SQLiteDatabase): Prom
     return { ...rentPeriod, contract, tenant, unit };
   });
 }
+
+export async function syncRentPeriodStatuses(db: SQLite.SQLiteDatabase): Promise<void> {
+  const periods = await db.getAllAsync<RentPeriod>("SELECT * FROM rent_periods WHERE status NOT IN ('paid')");
+  
+  for (const p of periods) {
+    const correctStatus = getRentPeriodStatus(p.dueDate, p.amountDue, p.amountPaid);
+    if (p.status !== correctStatus) {
+      await updateRentPeriod(db, p.id, { status: correctStatus });
+    }
+  }
+}

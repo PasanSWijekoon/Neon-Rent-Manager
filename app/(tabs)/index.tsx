@@ -344,10 +344,21 @@ export default function Home() {
                 <View className="flex-row items-center">
                   <View className="items-end mr-3">
                     <Text className="text-[#1E293B] font-poppins-semibold text-[13px] mb-1.5">LKR {formatLKR(item.amountDue)}</Text>
-                    <View className={`rounded-full px-2 py-0.5 flex-row items-center ${item.status === 'overdue' ? 'bg-[#FEE2E2]' : 'bg-[#FEF3C7]'}`}>
-                      <MaterialCommunityIcons name={item.status === 'overdue' ? 'alert-circle-outline' : 'clock-outline'} size={10} color={item.status === 'overdue' ? '#DC2626' : '#D97706'} style={{ marginRight: 2 }} />
-                      <Text className={`font-poppins-semibold text-[8px] uppercase ${item.status === 'overdue' ? 'text-[#DC2626]' : 'text-[#D97706]'}`}>
-                        {item.status === 'overdue' ? 'OVERDUE' : 'DUE'}
+                    <View className={`rounded-full px-2 py-0.5 flex-row items-center ${
+                      item.status === 'overdue' ? 'bg-[#FEE2E2]' : 
+                      item.status === 'upcoming' ? 'bg-[#E1FCEF]' : 'bg-[#FEF3C7]'
+                    }`}>
+                      <MaterialCommunityIcons 
+                        name={item.status === 'overdue' ? 'alert-circle-outline' : item.status === 'upcoming' ? 'calendar-clock' : 'clock-outline'} 
+                        size={10} 
+                        color={item.status === 'overdue' ? '#DC2626' : item.status === 'upcoming' ? '#10B981' : '#D97706'} 
+                        style={{ marginRight: 2 }} 
+                      />
+                      <Text className={`font-poppins-semibold text-[8px] uppercase ${
+                        item.status === 'overdue' ? 'text-[#DC2626]' : 
+                        item.status === 'upcoming' ? 'text-[#10B981]' : 'text-[#D97706]'
+                      }`}>
+                        {item.status.toUpperCase()}
                       </Text>
                     </View>
                   </View>

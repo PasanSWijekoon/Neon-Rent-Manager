@@ -30,6 +30,7 @@ export default function EditUnitScreen() {
   
   const [name, setName] = useState('');
   const [status, setStatus] = useState<UnitStatus>('vacant');
+  const [capacity, setCapacity] = useState('1');
 
   const [contracts, setContracts] = useState<(Contract & { tenant: Tenant | null })[]>([]);
 
@@ -43,6 +44,7 @@ export default function EditUnitScreen() {
         setUnit(u);
         setName(u.name);
         setStatus(u.status);
+        setCapacity(u.capacity?.toString() || '1');
         
         const p = await getProperty(db, u.propertyId);
         setProperty(p);
@@ -56,12 +58,21 @@ export default function EditUnitScreen() {
         );
         setContracts(consWithTenants);
 
-        const activeContract = cons.find(c => c.status === 'active');
-        if (activeContract) {
-          const { getRentPeriodsForContract } = require('@/lib/repositories/rentPeriods');
-          const periods = await getRentPeriodsForContract(db, activeContract.id);
-          setRentPeriods(periods.slice(0, 3)); // show top 3 recent
+        const { getRentPeriodsForContract } = require('@/lib/repositories/rentPeriods');
+        let allPeriods: any[] = [];
+        for (const c of consWithTenants) {
+           const periods = await getRentPeriodsForContract(db, c.id);
+           const periodsWithTenant = periods.map((p: any) => ({...p, tenantName: c.tenant?.name}));
+           allPeriods = allPeriods.concat(periodsWithTenant);
         }
+        
+        allPeriods.sort((a, b) => {
+           if (a.periodYear !== b.periodYear) return b.periodYear - a.periodYear;
+           if (a.periodMonth !== b.periodMonth) return b.periodMonth - a.periodMonth;
+           return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+        });
+
+        setRentPeriods(allPeriods.slice(0, 5)); // show top 5 recent
       }
     } catch (e) {
       console.error(e);
@@ -84,6 +95,15 @@ export default function EditUnitScreen() {
       Alert.alert('Validation Error', 'Please provide a unit name.');
       return;
     }
+    
+    let capacityNum = 1;
+    if (unit?.type !== 'shop') {
+      capacityNum = parseInt(capacity, 10);
+      if (isNaN(capacityNum) || capacityNum < 1) {
+        Alert.alert('Validation Error', 'Please provide a valid capacity (1 or more).');
+        return;
+      }
+    }
 
     Alert.alert(
       "Confirm Update",
@@ -99,6 +119,7 @@ export default function EditUnitScreen() {
               await updateUnit(db, id, {
                 name: trimmedName,
                 status,
+                capacity: capacityNum,
                 updatedAt: now,
               });
               router.back();
@@ -157,6 +178,7 @@ export default function EditUnitScreen() {
           <View>
             <Text className="font-poppins-semibold text-base text-[#1E293B]">{typeLabel}</Text>
             <Text className="font-poppins-regular text-xs text-slate-500">Property: {property?.name || 'Loading...'}</Text>
+            {!isShop && <Text className="font-poppins-regular text-xs text-slate-500">Capacity: {contracts.filter(c => c.status === 'active').length} / {unit.capacity} tenant(s)</Text>}
           </View>
         </View>
 
@@ -173,6 +195,23 @@ export default function EditUnitScreen() {
             />
           </View>
         </View>
+
+        {!isShop && (
+          <View className="mb-6">
+            <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Capacity (Number of Tenants)</Text>
+            <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4 h-14">
+              <Feather name="users" size={20} color="#94A3B8" className="mr-3" />
+              <TextInput style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
+                className="flex-1 font-poppins-regular text-[#1E293B] py-0"
+                placeholder="e.g. 4"
+                placeholderTextColor="#94A3B8"
+                keyboardType="number-pad"
+                value={capacity}
+                onChangeText={setCapacity}
+              />
+            </View>
+          </View>
+        )}
 
         <View className="mb-8">
           <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Occupancy Status</Text>
@@ -213,7 +252,10 @@ export default function EditUnitScreen() {
                       <Text className="font-poppins-semibold text-sm text-[#1E293B] mb-0.5">
                         {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][rp.periodMonth - 1]} {rp.periodYear}
                       </Text>
-                      <Text className="font-poppins-medium text-xs text-slate-400">
+                      <Text className="font-poppins-medium text-xs text-slate-500 mb-0.5" numberOfLines={1}>
+                        {rp.tenantName || 'Unknown Tenant'}
+                      </Text>
+                      <Text className="font-poppins-medium text-[11px] text-slate-400">
                         Rent: LKR {rp.amountDue.toLocaleString()}
                       </Text>
                     </View>

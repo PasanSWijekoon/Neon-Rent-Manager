@@ -8,6 +8,7 @@ export interface Unit {
   name: string;
   status: UnitStatus;
   currentContractId: string | null;
+  capacity: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -131,7 +131,7 @@ export default function NewContractScreen() {
             try {
               const isOverlap = await checkContractOverlap(db, unitId, startDate, endDate);
               if (isOverlap) {
-                Alert.alert('Contract Overlap', 'This unit already has a contract covering part of this period.');
+                Alert.alert('Unit at Capacity', 'This unit has reached its maximum tenant capacity for the selected period.');
                 setSaving(false);
                 return;
               }
@@ -315,8 +315,8 @@ export default function NewContractScreen() {
             </View>
 
             {tenants.length > 0 && (
-              <View className="px-6 mb-4">
-                <View className="flex-row items-center bg-slate-50 border border-slate-200 rounded-xl px-4 h-14">
+              <View className="px-6 mb-4 flex-row items-center">
+                <View className="flex-1 flex-row items-center bg-slate-50 border border-slate-200 rounded-xl px-4 h-14 mr-3">
                   <Feather name="search" size={18} color="#94A3B8" className="mr-3" />
                   <TextInput style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
                     className="flex-1 font-poppins-regular text-[#1E293B] py-0"
@@ -331,6 +331,15 @@ export default function NewContractScreen() {
                     </TouchableOpacity>
                   ) : null}
                 </View>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setTenantModalVisible(false);
+                    router.push('/tenants/new' as Href);
+                  }}
+                  className="w-14 h-14 bg-blue-50 rounded-xl items-center justify-center border border-blue-100"
+                >
+                  <Feather name="user-plus" size={20} color="#3B82F6" />
+                </TouchableOpacity>
               </View>
             )}
             

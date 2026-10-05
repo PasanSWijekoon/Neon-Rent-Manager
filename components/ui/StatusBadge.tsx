@@ -18,7 +18,7 @@ export function StatusBadge({ status, label }: StatusBadgeProps) {
       case 'overdue':
         return { bg: 'bg-[#FFEBEE]', text: 'text-error' }; 
       case 'upcoming':
-        return { bg: 'bg-[#E3F2FD]', text: 'text-primary' }; 
+        return { bg: 'bg-[#E1FCEF]', text: 'text-success' }; 
       case 'partial':
         return { bg: 'bg-[#F3E8FF]', text: 'text-purple' }; 
       default:

@@ -3,8 +3,8 @@ import { Unit } from '@/types/unit';
 
 export async function createUnit(db: SQLite.SQLiteDatabase, unit: Unit): Promise<void> {
   await db.runAsync(
-    'INSERT INTO units (id, propertyId, type, name, status, currentContractId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [unit.id, unit.propertyId, unit.type, unit.name, unit.status, unit.currentContractId, unit.createdAt, unit.updatedAt]
+    'INSERT INTO units (id, propertyId, type, name, status, currentContractId, capacity, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [unit.id, unit.propertyId, unit.type, unit.name, unit.status, unit.currentContractId, unit.capacity, unit.createdAt, unit.updatedAt]
   );
 }
 
@@ -23,7 +23,7 @@ export async function getUnitById(db: SQLite.SQLiteDatabase, id: string): Promis
 export async function updateUnit(
   db: SQLite.SQLiteDatabase,
   id: string,
-  updates: Partial<Pick<Unit, 'name' | 'status' | 'updatedAt'>>
+  updates: Partial<Pick<Unit, 'name' | 'status' | 'capacity' | 'updatedAt'>>
 ): Promise<void> {
   const setStatements: string[] = [];
   const values: any[] = [];
@@ -35,6 +35,10 @@ export async function updateUnit(
   if (updates.status !== undefined) {
     setStatements.push('status = ?');
     values.push(updates.status);
+  }
+  if (updates.capacity !== undefined) {
+    setStatements.push('capacity = ?');
+    values.push(updates.capacity);
   }
   if (updates.updatedAt !== undefined) {
     setStatements.push('updatedAt = ?');

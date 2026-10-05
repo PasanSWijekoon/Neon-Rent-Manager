@@ -17,6 +17,7 @@ export default function NewUnitScreen() {
   const db = useSQLiteContext();
 
   const [name, setName] = useState('');
+  const [capacity, setCapacity] = useState('1');
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [loadingProps, setLoadingProps] = useState(true);
@@ -50,6 +51,15 @@ export default function NewUnitScreen() {
       Alert.alert('Validation Error', 'Please provide a unit name.');
       return;
     }
+    
+    let capacityNum = 1;
+    if (type !== 'shop') {
+      capacityNum = parseInt(capacity, 10);
+      if (isNaN(capacityNum) || capacityNum < 1) {
+        Alert.alert('Validation Error', 'Please provide a valid capacity (1 or more).');
+        return;
+      }
+    }
 
     const selectedProp = properties.find(p => p.id === selectedPropertyId);
 
@@ -70,6 +80,7 @@ export default function NewUnitScreen() {
                 type: type || 'hostel_room',
                 name: trimmedName,
                 status: 'vacant',
+                capacity: capacityNum,
                 currentContractId: null,
                 createdAt: now,
                 updatedAt: now,
@@ -112,6 +123,23 @@ export default function NewUnitScreen() {
             />
           </View>
         </View>
+
+        {type !== 'shop' && (
+          <View className="mb-6">
+            <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Capacity (Number of Tenants)</Text>
+            <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4 h-14">
+              <Feather name="users" size={20} color="#94A3B8" className="mr-3" />
+              <TextInput style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
+                className="flex-1 font-poppins-regular text-[#1E293B] py-0"
+                placeholder="e.g. 4"
+                placeholderTextColor="#94A3B8"
+                keyboardType="number-pad"
+                value={capacity}
+                onChangeText={setCapacity}
+              />
+            </View>
+          </View>
+        )}
 
         <View className="mb-8">
           <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Select Property</Text>

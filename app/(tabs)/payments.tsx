@@ -33,6 +33,9 @@ export default function Payments() {
         await generateRentPeriodsForContract(db, contract);
       }
 
+      const { syncRentPeriodStatuses } = require('@/lib/repositories/rentPeriods');
+      await syncRentPeriodStatuses(db);
+
       const periods = await getRentPeriodsWithDetails(db);
       setRentPeriods(periods);
     } catch (error) {
@@ -158,6 +161,11 @@ export default function Payments() {
               badgeText = 'text-[#9333EA]';
               iconName = 'contrast';
               iconColor = '#9333EA';
+            } else if (period.status === 'upcoming') {
+              badgeBg = 'bg-[#E1FCEF]';
+              badgeText = 'text-[#10B981]';
+              iconName = 'calendar-clock';
+              iconColor = '#10B981';
             } else {
               badgeBg = 'bg-[#FFF9E5]';
               badgeText = 'text-[#D97706]';

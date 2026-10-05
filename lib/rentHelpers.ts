@@ -6,19 +6,31 @@ export function getRentPeriodStatus(
   amountPaid: number
 ): RentPeriodStatus {
   const remaining = amountDue - amountPaid;
-  const today = new Date().toISOString().split('T')[0];
 
   if (remaining <= 0) {
     return 'paid';
-  }
-
-  if (dueDate < today) {
-    return 'overdue';
   }
 
   if (amountPaid > 0) {
     return 'partial';
   }
 
-  return 'due';
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  
+  const [dueYear, dueMonth, dueDay] = dueDate.split('-').map(Number);
+  const due = new Date(Date.UTC(dueYear, dueMonth - 1, dueDay));
+
+  const diffTime = due.getTime() - today.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return 'overdue';
+  }
+
+  if (diffDays === 0) {
+    return 'due';
+  }
+
+  return 'upcoming';
 }

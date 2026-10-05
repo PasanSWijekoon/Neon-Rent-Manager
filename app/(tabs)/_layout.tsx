@@ -78,11 +78,15 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
                 borderRadius: 16, // Rounded rectangle instead of a pill
                 overflow: 'hidden',
                 paddingVertical: 8,
-                paddingHorizontal: isFocused ? 20 : 12,
+                paddingHorizontal: isFocused ? 16 : 8,
               }}
             >
               <MaterialCommunityIcons name={iconName as any} size={24} color={color} />
-              <Text style={{ fontSize: 10, color: color, marginTop: 4, fontFamily: 'Poppins_600SemiBold' }}>
+              <Text 
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={{ fontSize: 10, color: color, marginTop: 4, fontFamily: 'Poppins_600SemiBold' }}
+              >
                 {label}
               </Text>
             </View>

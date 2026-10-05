@@ -2,7 +2,7 @@ import * as SQLite from 'expo-sqlite';
 
 export const DB_NAME = 'neon-rent-manager.db';
 
-const CURRENT_SCHEMA_VERSION = 3;
+const CURRENT_SCHEMA_VERSION = 4;
 
 export async function initDatabase(db: SQLite.SQLiteDatabase) {
   // WIPE DATA block removed
@@ -37,6 +37,7 @@ export async function initDatabase(db: SQLite.SQLiteDatabase) {
         name TEXT NOT NULL,
         status TEXT NOT NULL,
         currentContractId TEXT,
+        capacity INTEGER DEFAULT 1,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL,
         FOREIGN KEY (propertyId) REFERENCES properties (id)
@@ -123,5 +124,14 @@ export async function initDatabase(db: SQLite.SQLiteDatabase) {
       CREATE INDEX IF NOT EXISTS idx_units_created ON units(createdAt);
     `);
     await db.execAsync(`PRAGMA user_version = 3`);
+  }
+
+  if (currentDbVersion < 4) {
+    try {
+      await db.execAsync(`ALTER TABLE units ADD COLUMN capacity INTEGER DEFAULT 1;`);
+    } catch (e) {
+      console.log('Column capacity already exists or error:', e);
+    }
+    await db.execAsync(`PRAGMA user_version = 4`);
   }
 }
