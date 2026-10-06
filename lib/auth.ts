@@ -1,5 +1,7 @@
 import { 
-  signInWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut as firebaseSignOut, 
   onAuthStateChanged,
   User
@@ -72,5 +74,58 @@ export async function changeUserPassword(currentPassword: string, newPassword: s
       throw new Error('Current password is incorrect.');
     }
     throw new Error('Failed to update password. Please try again.');
+  }
+}
+
+export async function signUp(email: string, password: string, name: string): Promise<User> {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    await updateProfile(user, { displayName: name });
+    await user.reload();
+    return auth.currentUser || user;
+  } catch (error: any) {
+    const errorCode = error.code;
+    let message = 'Unable to sign up. Please try again.';
+    
+    switch (errorCode) {
+      case 'auth/email-already-in-use':
+        message = 'This email is already associated with an account.';
+        break;
+      case 'auth/invalid-email':
+        message = 'Please enter a valid email address.';
+        break;
+      case 'auth/weak-password':
+        message = 'Password is too weak. Please use at least 6 characters.';
+        break;
+      case 'auth/network-request-failed':
+        message = 'Unable to connect. Please check your internet connection.';
+        break;
+    }
+    
+    throw new Error(message);
+  }
+}
+
+export async function resetPassword(email: string): Promise<void> {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error: any) {
+    const errorCode = error.code;
+    let message = 'Unable to send password reset email. Please try again.';
+    
+    switch (errorCode) {
+      case 'auth/invalid-email':
+        message = 'Please enter a valid email address.';
+        break;
+      case 'auth/user-not-found':
+        message = 'No account found with this email address.';
+        break;
+      case 'auth/network-request-failed':
+        message = 'Unable to connect. Please check your internet connection.';
+        break;
+    }
+    
+    throw new Error(message);
   }
 }

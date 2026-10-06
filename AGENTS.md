@@ -1703,3 +1703,20 @@ Before every feature implementation:
 - Verify before moving to the next feature.
 
 
+
+---
+
+# Recently Discovered Rules & Exceptions
+
+## Shared Spaces / Hostel Capacity Rule
+- Unlike a standard shop, a single hostel unit/room can have **multiple active contracts** simultaneously (e.g., a room shared by 4 tenants).
+- The UI (such as Unit Details) must account for multiple active tenants within a single unit and merge their rent history accordingly so the owner can differentiate payments.
+
+## Authentication & Multi-Tenant Rules
+- **Do NOT wipe the SQLite DB on logout** until Cloud Sync is fully implemented, to avoid permanently losing the user's local test data.
+- User profile phone numbers are stored in AsyncStorage but must be scoped to the user ID (e.g., @owner_contact_${user.uid}) to prevent data collision if multiple users log into the same physical device.
+- Passwords must be strictly validated: at least 8 characters long, contain at least one letter and one number, and cannot be identical to the old password when updating.
+
+## UI & Styling Exceptions
+- **Avoid using NativeWind space-y-* classes** as they cause inconsistent vertical spacing on some devices. Use explicit margin-bottom (e.g., mb-5) on individual children instead.
+- When conditionally rendering full-screen overlays (like the Rocket animation), rely directly on the global state in the render tree (e.g., {isNewLogin && <Overlay/>}) rather than syncing to local useState to prevent 1-frame rendering flashes.

@@ -18,6 +18,7 @@ import { StatusBadge, BadgeStatus } from '@/components/ui/StatusBadge';
 import { typography, colors } from '@/constants/theme';
 import { AppLogo } from '@/components/ui/AppLogo';
 import { useAuthStore } from '@/store/authStore';
+import { auth } from '@/lib/firebase';
 import { useDashboard } from '@/hooks/useDashboard';
 
 const { height, width } = Dimensions.get('window');
@@ -103,8 +104,7 @@ function RocketTransitionOverlay({ onComplete }: { onComplete: () => void }) {
 }
 
 export default function Home() {
-  const { user, isNewLogin, setIsNewLogin } = useAuthStore();
-  const [showOverlay, setShowOverlay] = useState(isNewLogin);
+  const { user, isNewLogin, setIsNewLogin, profileLastUpdated } = useAuthStore();
 
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -131,13 +131,12 @@ export default function Home() {
   );
 
   const handleOverlayComplete = () => {
-    setShowOverlay(false);
     setIsNewLogin(false); // Reset global flag so it doesn't happen on normal navigation
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {showOverlay && <RocketTransitionOverlay onComplete={handleOverlayComplete} />}
+      {isNewLogin && <RocketTransitionOverlay onComplete={handleOverlayComplete} />}
       
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
@@ -149,7 +148,7 @@ export default function Home() {
               Neon Rent Manager
             </Text>
             <Text className="text-[22px] font-poppins-bold text-text-primary mt-1" numberOfLines={1} adjustsFontSizeToFit>
-              {getGreeting()}, {user?.displayName ? user.displayName.split(' ')[0] : 'Admin'}
+              {getGreeting()}, {(() => { const name = user?.displayName || auth.currentUser?.displayName; return name ? name.split(' ')[0] : 'Admin'; })()}
             </Text>
             <Text className={`${typography.bodyM} text-text-secondary mt-1`}>
               Here's your rental overview for

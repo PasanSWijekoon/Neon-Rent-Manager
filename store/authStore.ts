@@ -6,9 +6,11 @@ type AuthState = {
   loading: boolean;
   authenticated: boolean;
   isNewLogin: boolean;
+  profileLastUpdated: number;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
   setIsNewLogin: (isNew: boolean) => void;
+  triggerProfileRefresh: () => void;
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -16,7 +18,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
   authenticated: false,
   isNewLogin: false,
+  profileLastUpdated: 0,
   setUser: (user) => set({ user, authenticated: !!user }),
   setLoading: (loading) => set({ loading }),
   setIsNewLogin: (isNew) => set({ isNewLogin: isNew }),
+  triggerProfileRefresh: () => set({ profileLastUpdated: Date.now() }),
 }));

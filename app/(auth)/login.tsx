@@ -8,8 +8,10 @@ import { Feather } from '@expo/vector-icons';
 import { colors } from '@/constants/theme';
 import Constants from 'expo-constants';
 import { useAuthStore } from '@/store/authStore';
+import { useRouter } from 'expo-router';
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -132,10 +134,23 @@ export default function LoginScreen() {
                 onPress={handleSignIn} 
                 loading={loading} 
               />
+              
+              <View className="mt-6 space-y-4">
+                <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password' as any)} className="items-center py-2">
+                  <Text className="font-poppins-semibold text-sm text-primary">Forgot Password?</Text>
+                </TouchableOpacity>
+
+                <View className="flex-row items-center justify-center pt-2">
+                  <Text className="font-poppins-medium text-sm text-slate-500">Don't have an account? </Text>
+                  <TouchableOpacity onPress={() => router.push('/(auth)/signup' as any)} className="py-2">
+                    <Text className="font-poppins-semibold text-sm text-primary">Sign Up</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
           </View>
           
-          <Text className="text-center font-poppins-medium text-[11px] text-slate-400 mb-6">
+          <Text className="text-center font-poppins-medium text-[11px] text-slate-400 mb-6 mt-4">
             Version {appVersion}
           </Text>
         </ScrollView>
