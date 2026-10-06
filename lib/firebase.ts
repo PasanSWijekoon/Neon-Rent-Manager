@@ -1,6 +1,7 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import type { FirebaseApp } from 'firebase/app';
 // @ts-ignore - type definition is missing in newer Firebase versions
+import { getFirestore } from 'firebase/firestore';
 import { initializeAuth, getReactNativePersistence, getAuth } from 'firebase/auth';
 import type { Auth } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -28,4 +29,6 @@ if (!getApps().length) {
   auth = getAuth(app);
 }
 
-export { app, auth };
+const db = getFirestore(app);
+
+export { app, auth, db as firestore };

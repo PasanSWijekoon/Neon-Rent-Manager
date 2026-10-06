@@ -2,7 +2,7 @@ import * as SQLite from 'expo-sqlite';
 
 export const DB_NAME = 'neon-rent-manager.db';
 
-const CURRENT_SCHEMA_VERSION = 4;
+const CURRENT_SCHEMA_VERSION = 5;
 
 export async function initDatabase(db: SQLite.SQLiteDatabase) {
   // WIPE DATA block removed
@@ -134,4 +134,30 @@ export async function initDatabase(db: SQLite.SQLiteDatabase) {
     }
     await db.execAsync(`PRAGMA user_version = 4`);
   }
+
+  if (currentDbVersion < 5) {
+    const tables = ['properties', 'units', 'tenants', 'contracts', 'rent_periods', 'payments'];
+    for (const table of tables) {
+      try {
+        await db.execAsync(`ALTER TABLE ${table} ADD COLUMN syncStatus TEXT DEFAULT 'pending'`);
+        await db.execAsync(`ALTER TABLE ${table} ADD COLUMN userId TEXT`);
+      } catch (e) {
+        console.log(`Column syncStatus/userId already exists in ${table} or error:`, e);
+      }
+    }
+    await db.execAsync(`PRAGMA user_version = 5`);
+  }
+}
+
+export async function clearDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
+  await db.execAsync('PRAGMA foreign_keys = OFF;');
+  const tables = ['payments', 'rent_periods', 'contracts', 'units', 'tenants', 'properties'];
+  for (const table of tables) {
+    try {
+      await db.execAsync(`DELETE FROM ${table}`);
+    } catch (e) {
+      console.error(`Failed to clear table ${table}`, e);
+    }
+  }
+  await db.execAsync('PRAGMA foreign_keys = ON;');
 }

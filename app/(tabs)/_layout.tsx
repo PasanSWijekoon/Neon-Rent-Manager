@@ -1,5 +1,8 @@
 import { Redirect, Tabs } from 'expo-router';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, AppState } from 'react-native';
+import { useEffect } from 'react';
+import { useSQLiteContext } from 'expo-sqlite';
+import { pushSync } from '@/lib/sync';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '@/constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -99,6 +102,25 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
 
 export default function TabLayout() {
   const { user, loading } = useAuthStore();
+  const db = useSQLiteContext();
+
+  useEffect(() => {
+    if (!user) return;
+    
+    // Sync immediately when the dashboard layout mounts
+    pushSync(db).catch(console.error);
+
+    // Sync silently whenever the user opens the app from the background
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') {
+        pushSync(db).catch(console.error);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [db, user]);
 
   if (loading) {
     return null;

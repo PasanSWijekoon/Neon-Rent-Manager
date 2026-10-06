@@ -5,6 +5,9 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { typography, colors } from '@/constants/theme';
 import { signOut } from '@/lib/auth';
+import { pushSync } from '@/lib/sync';
+import { clearDatabase } from '@/lib/database';
+import { useSQLiteContext } from 'expo-sqlite';
 
 type SettingItemProps = {
   icon: keyof typeof Feather.glyphMap | keyof typeof MaterialCommunityIcons.glyphMap;
@@ -50,6 +53,7 @@ function SettingItem({ icon, title, subtitle, isDestructive, onPress, iconFamily
 }
 
 export default function SettingsScreen() {
+  const db = useSQLiteContext();
   const handleLogout = () => {
     Alert.alert(
       "Log Out",
@@ -61,6 +65,8 @@ export default function SettingsScreen() {
           style: "destructive",
           onPress: async () => {
             try {
+              await pushSync(db);
+              await clearDatabase(db);
               await signOut();
               router.replace('/(auth)/login' as any);
             } catch (e) {
@@ -119,7 +125,7 @@ export default function SettingsScreen() {
             iconFamily="MaterialCommunityIcons"
             title="Cloud Sync" 
             subtitle="Sync your data with Firebase"
-            onPress={() => showPlaceholder("Cloud Sync")}
+            onPress={async () => { try { await pushSync(db); Alert.alert('Success', 'Data synced to cloud!'); } catch(e) { Alert.alert('Error', 'Failed to sync.'); } }}
           />
           
           <SettingItem 
@@ -135,7 +141,7 @@ export default function SettingsScreen() {
             iconFamily="MaterialCommunityIcons"
             title="Restore Data" 
             subtitle="Import data from a backup file"
-            onPress={() => showPlaceholder("Restore")}
+            onPress={async () => { try { const { pullSync } = require('@/lib/sync'); await pullSync(db); Alert.alert('Success', 'Data restored from cloud!'); } catch(e) { Alert.alert('Error', 'Failed to restore.'); } }}
           />
 
           <Text className="font-poppins-semibold text-xs text-slate-400 uppercase tracking-wider mb-3 mt-6 ml-1">
