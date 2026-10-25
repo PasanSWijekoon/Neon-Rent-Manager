@@ -335,7 +335,7 @@ export default function Home() {
 
         {/* This Month's Due */}
         <View className="mb-4 flex-row justify-between items-center">
-          <Text className={`${typography.h2} text-[#1E293B] font-poppins-bold`}>This Month&apos;s Due & Overdue</Text>
+          <Text className={`${typography.h2} text-[#1E293B] font-poppins-bold`}>Due and Overdue</Text>
         </View>
         
         {thisMonthDue.length === 0 ? (
