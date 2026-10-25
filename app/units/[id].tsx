@@ -66,13 +66,14 @@ export default function EditUnitScreen() {
            allPeriods = allPeriods.concat(periodsWithTenant);
         }
         
-        allPeriods.sort((a, b) => {
+        const recentPeriods = allPeriods.filter((p: any) => p.status !== 'upcoming');
+        recentPeriods.sort((a, b) => {
            if (a.periodYear !== b.periodYear) return b.periodYear - a.periodYear;
            if (a.periodMonth !== b.periodMonth) return b.periodMonth - a.periodMonth;
            return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
         });
 
-        setRentPeriods(allPeriods.slice(0, 5)); // show top 5 recent
+        setRentPeriods(recentPeriods.slice(0, 5)); // show top 5 recent
       }
     } catch (e) {
       console.error(e);

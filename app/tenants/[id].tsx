@@ -48,11 +48,12 @@ export default function TenantDetailsScreen() {
             const periods = await getRentPeriodsForContract(db, ac.id);
             allPeriods = [...allPeriods, ...periods];
           }
-          allPeriods.sort((a, b) => {
+          const recentPeriods = allPeriods.filter((p: any) => p.status !== 'upcoming');
+          recentPeriods.sort((a, b) => {
             if (a.periodYear !== b.periodYear) return b.periodYear - a.periodYear;
             return b.periodMonth - a.periodMonth;
           });
-          setRentPeriods(allPeriods.slice(0, 3));
+          setRentPeriods(recentPeriods.slice(0, 5));
         }
       }
     } catch (e) {
