@@ -29,9 +29,12 @@ export async function updateRentPeriod(db: SQLite.SQLiteDatabase, id: string, da
   
   if (data.amountPaid !== undefined) { updates.push('amountPaid = ?'); args.push(data.amountPaid); }
   if (data.status !== undefined) { updates.push('status = ?'); args.push(data.status); }
-  if (data.updatedAt !== undefined) { updates.push('updatedAt = ?'); args.push(data.updatedAt); }
   
-  if (updates.length === 0) return;
+  const now = data.updatedAt || new Date().toISOString();
+  updates.push('updatedAt = ?');
+  args.push(now);
+  
+  updates.push("syncStatus = 'pending'");
   
   args.push(id);
   await db.runAsync(`UPDATE rent_periods SET ${updates.join(', ')} WHERE id = ?`, args);

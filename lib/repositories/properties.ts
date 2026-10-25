@@ -35,7 +35,12 @@ export async function updateProperty(
   if (updates.updatedAt !== undefined) {
     setStatements.push('updatedAt = ?');
     values.push(updates.updatedAt);
+  } else {
+    setStatements.push('updatedAt = ?');
+    values.push(new Date().toISOString());
   }
+
+  setStatements.push("syncStatus = 'pending'");
 
   if (setStatements.length === 0) return;
 

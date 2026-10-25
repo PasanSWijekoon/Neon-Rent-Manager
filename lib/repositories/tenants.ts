@@ -24,9 +24,12 @@ export async function updateTenant(db: SQLite.SQLiteDatabase, id: string, data: 
   if (data.phone !== undefined) { updates.push('phone = ?'); args.push(data.phone); }
   if (data.address !== undefined) { updates.push('address = ?'); args.push(data.address); }
   if (data.notes !== undefined) { updates.push('notes = ?'); args.push(data.notes); }
-  if (data.updatedAt !== undefined) { updates.push('updatedAt = ?'); args.push(data.updatedAt); }
   
-  if (updates.length === 0) return;
+  const now = data.updatedAt || new Date().toISOString();
+  updates.push('updatedAt = ?');
+  args.push(now);
+
+  updates.push("syncStatus = 'pending'");
   
   args.push(id);
   await db.runAsync(`UPDATE tenants SET ${updates.join(', ')} WHERE id = ?`, args);
@@ -34,5 +37,5 @@ export async function updateTenant(db: SQLite.SQLiteDatabase, id: string, data: 
 
 export async function archiveTenant(db: SQLite.SQLiteDatabase, id: string): Promise<void> {
   const now = new Date().toISOString();
-  await db.runAsync('UPDATE tenants SET archivedAt = ?, updatedAt = ? WHERE id = ?', [now, now, id]);
+  await db.runAsync("UPDATE tenants SET archivedAt = ?, updatedAt = ?, syncStatus = 'pending' WHERE id = ?", [now, now, id]);
 }

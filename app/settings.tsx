@@ -5,8 +5,7 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { typography, colors } from '@/constants/theme';
 import { signOut } from '@/lib/auth';
-import { pushSync } from '@/lib/sync';
-import { clearDatabase } from '@/lib/database';
+import { pushSync, pullSync, getPendingSyncCount } from '@/lib/sync';
 import { useSQLiteContext } from 'expo-sqlite';
 
 type SettingItemProps = {
@@ -54,28 +53,69 @@ function SettingItem({ icon, title, subtitle, isDestructive, onPress, iconFamily
 
 export default function SettingsScreen() {
   const db = useSQLiteContext();
-  const handleLogout = () => {
-    Alert.alert(
-      "Log Out",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Log Out", 
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await pushSync(db);
-              await clearDatabase(db);
-              await signOut();
-              router.replace('/(auth)/login' as any);
-            } catch (e) {
-              console.error(e);
-            }
-          }
+
+  const handleLogout = async () => {
+    try {
+      const pendingCount = await getPendingSyncCount(db);
+
+      const proceedSignOut = async () => {
+        try {
+          await signOut();
+          router.replace('/(auth)/login' as any);
+        } catch (e) {
+          console.error(e);
+          Alert.alert("Error", "Failed to sign out. Please try again.");
         }
-      ]
-    );
+      };
+
+      if (pendingCount > 0) {
+        Alert.alert(
+          "Unsynced Changes Detected",
+          `You have ${pendingCount} local change${pendingCount === 1 ? '' : 's'} waiting to be uploaded to Firebase Cloud.\n\nWould you like to sync now before signing out?`,
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Sync & Sign Out",
+              onPress: async () => {
+                const res = await pushSync(db);
+                if (res.success) {
+                  await proceedSignOut();
+                } else {
+                  Alert.alert(
+                    "Sync Incomplete",
+                    "Unable to upload some changes (you might be offline). Your data will stay safe locally on this device, but will not be in the cloud yet. Sign out anyway?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      { text: "Sign Out Anyway", style: "destructive", onPress: proceedSignOut }
+                    ]
+                  );
+                }
+              }
+            },
+            {
+              text: "Sign Out Without Syncing",
+              style: "destructive",
+              onPress: proceedSignOut
+            }
+          ]
+        );
+      } else {
+        Alert.alert(
+          "Log Out",
+          "Are you sure you want to log out? Your local rental data will remain safely stored on this device.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { 
+              text: "Log Out", 
+              style: "destructive",
+              onPress: proceedSignOut
+            }
+          ]
+        );
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const showPlaceholder = (feature: string) => {
@@ -125,7 +165,18 @@ export default function SettingsScreen() {
             iconFamily="MaterialCommunityIcons"
             title="Cloud Sync" 
             subtitle="Sync your data with Firebase"
-            onPress={async () => { try { await pushSync(db); Alert.alert('Success', 'Data synced to cloud!'); } catch(e) { Alert.alert('Error', 'Failed to sync.'); } }}
+            onPress={async () => { 
+              try { 
+                const res = await pushSync(db); 
+                if (res.success) {
+                  Alert.alert('Success', `Data successfully synced to cloud! (${res.pushedCount} records updated)`);
+                } else {
+                  Alert.alert('Sync Incomplete', res.error || 'Failed to sync. Please check your internet connection.');
+                }
+              } catch(e: any) { 
+                Alert.alert('Error', e?.message || 'Failed to sync.'); 
+              } 
+            }}
           />
           
           <SettingItem 
@@ -140,8 +191,31 @@ export default function SettingsScreen() {
             icon="database-import" 
             iconFamily="MaterialCommunityIcons"
             title="Restore Data" 
-            subtitle="Import data from a backup file"
-            onPress={async () => { try { const { pullSync } = require('@/lib/sync'); await pullSync(db); Alert.alert('Success', 'Data restored from cloud!'); } catch(e) { Alert.alert('Error', 'Failed to restore.'); } }}
+            subtitle="Import data from cloud backup"
+            onPress={async () => { 
+              Alert.alert(
+                "Restore from Cloud",
+                "This will download your records from Firebase Cloud. Any existing local records will be merged/updated. Proceed?",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Restore",
+                    onPress: async () => {
+                      try { 
+                        const res = await pullSync(db); 
+                        if (res.success) {
+                          Alert.alert('Success', `Data restored from cloud! (${res.pulledCount} records imported)`); 
+                        } else {
+                          Alert.alert('Restore Incomplete', res.error || 'Failed to restore. Please check your internet connection.');
+                        }
+                      } catch(e: any) { 
+                        Alert.alert('Error', e?.message || 'Failed to restore.'); 
+                      }
+                    }
+                  }
+                ]
+              );
+            }}
           />
 
           <Text className="font-poppins-semibold text-xs text-slate-400 uppercase tracking-wider mb-3 mt-6 ml-1">

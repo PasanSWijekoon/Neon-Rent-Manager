@@ -27,9 +27,12 @@ export async function updateContract(db: SQLite.SQLiteDatabase, id: string, data
   if (data.status !== undefined) { updates.push('status = ?'); args.push(data.status); }
   if (data.endDate !== undefined) { updates.push('endDate = ?'); args.push(data.endDate); }
   if (data.notes !== undefined) { updates.push('notes = ?'); args.push(data.notes); }
-  if (data.updatedAt !== undefined) { updates.push('updatedAt = ?'); args.push(data.updatedAt); }
   
-  if (updates.length === 0) return;
+  const now = data.updatedAt || new Date().toISOString();
+  updates.push('updatedAt = ?');
+  args.push(now);
+
+  updates.push("syncStatus = 'pending'");
   
   args.push(id);
   await db.runAsync(`UPDATE contracts SET ${updates.join(', ')} WHERE id = ?`, args);
@@ -81,9 +84,9 @@ export async function syncContractStatuses(db: SQLite.SQLiteDatabase): Promise<v
 
   if (expiredContracts.length === 0) return;
 
-  // Update their status to 'expired'
+  // Update their status to 'expired' and flag for cloud sync
   await db.runAsync(
-    `UPDATE contracts SET status = 'expired', updatedAt = ? WHERE status = 'active' AND endDate IS NOT NULL AND endDate < ?`,
+    `UPDATE contracts SET status = 'expired', updatedAt = ?, syncStatus = 'pending' WHERE status = 'active' AND endDate IS NOT NULL AND endDate < ?`,
     [now, today]
   );
 
@@ -92,7 +95,7 @@ export async function syncContractStatuses(db: SQLite.SQLiteDatabase): Promise<v
   for (const unitId of affectedUnitIds) {
     const isStillOccupied = await checkUnitOccupiedToday(db, unitId);
     await db.runAsync(
-      `UPDATE units SET status = ?, updatedAt = ? WHERE id = ?`,
+      `UPDATE units SET status = ?, updatedAt = ?, syncStatus = 'pending' WHERE id = ?`,
       [isStillOccupied ? 'occupied' : 'vacant', now, unitId]
     );
   }
