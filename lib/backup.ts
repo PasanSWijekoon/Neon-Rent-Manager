@@ -1,5 +1,8 @@
 import { SQLiteDatabase } from 'expo-sqlite';
-import { Share } from 'react-native';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
+import * as DocumentPicker from 'expo-document-picker';
+import { AES, Utf8 } from 'crypto-es';
 
 export const BACKUP_TABLES = [
   'properties',
@@ -12,7 +15,17 @@ export const BACKUP_TABLES = [
 
 export type BackupTable = typeof BACKUP_TABLES[number];
 
-export interface BackupPayload {
+export interface EncryptedBackupContainer {
+  format: 'NEON_RENT_MANAGER_ENCRYPTED_BACKUP';
+  version: 1;
+  createdAt: string;
+  appName: 'Neon Rent Manager';
+  cipher: 'AES-256';
+  totalRecords: number;
+  ciphertext: string;
+}
+
+export interface DecryptedBackupData {
   version: number;
   appName: string;
   exportedAt: string;
@@ -23,6 +36,7 @@ export interface BackupPayload {
 export interface BackupResult {
   success: boolean;
   totalRecords: number;
+  fileName?: string;
   error?: string;
 }
 
@@ -33,40 +47,132 @@ export interface RestoreResult {
 }
 
 /**
- * Exports all local SQLite domain data as a structured JSON object
- * and opens the native Android Share Sheet.
+ * Gathers all domain data from SQLite and returns a structured object.
  */
-export async function exportLocalBackup(db: SQLiteDatabase): Promise<BackupResult> {
-  try {
-    const backupData: Record<string, Record<string, unknown>[]> = {};
-    let totalRecords = 0;
+export async function dumpDatabaseSnapshot(db: SQLiteDatabase): Promise<{
+  snapshot: DecryptedBackupData;
+  totalRecords: number;
+}> {
+  const backupData: Record<string, Record<string, unknown>[]> = {};
+  let totalRecords = 0;
 
-    for (const table of BACKUP_TABLES) {
-      const rows = await db.getAllAsync<Record<string, unknown>>(`SELECT * FROM ${table}`);
-      // Remove sensitive local internal tracking if needed, keep userId and domain columns
-      backupData[table] = rows;
-      totalRecords += rows.length;
+  for (const table of BACKUP_TABLES) {
+    const rows = await db.getAllAsync<Record<string, unknown>>(`SELECT * FROM ${table}`);
+    backupData[table] = rows;
+    totalRecords += rows.length;
+  }
+
+  const snapshot: DecryptedBackupData = {
+    version: 1,
+    appName: 'Neon Rent Manager',
+    exportedAt: new Date().toISOString(),
+    totalRecords,
+    data: backupData,
+  };
+
+  return { snapshot, totalRecords };
+}
+
+/**
+ * Encrypts a database snapshot with the owner's numeric PIN using AES-256
+ * and packages it into a verified container.
+ */
+export function encryptSnapshot(snapshot: DecryptedBackupData, pin: string): EncryptedBackupContainer {
+  const jsonPayload = JSON.stringify(snapshot);
+  const ciphertext = AES.encrypt(jsonPayload, pin).toString();
+
+  return {
+    format: 'NEON_RENT_MANAGER_ENCRYPTED_BACKUP',
+    version: 1,
+    createdAt: new Date().toISOString(),
+    appName: 'Neon Rent Manager',
+    cipher: 'AES-256',
+    totalRecords: snapshot.totalRecords,
+    ciphertext,
+  };
+}
+
+/**
+ * Decrypts an EncryptedBackupContainer using the owner's numeric PIN.
+ * Returns the decrypted data or throws if PIN is incorrect or payload corrupted.
+ */
+export function decryptSnapshot(containerText: string, pin: string): DecryptedBackupData {
+  let container: EncryptedBackupContainer;
+  try {
+    container = JSON.parse(containerText.trim());
+  } catch {
+    throw new Error('Invalid file format. This is not a valid Neon backup file.');
+  }
+
+  if (container.format !== 'NEON_RENT_MANAGER_ENCRYPTED_BACKUP' || !container.ciphertext) {
+    throw new Error('Unrecognized backup format. Please select a valid .neon backup file.');
+  }
+
+  let decryptedJson = '';
+  try {
+    const bytes = AES.decrypt(container.ciphertext, pin);
+    decryptedJson = bytes.toString(Utf8);
+  } catch {
+    throw new Error('Incorrect PIN. Please re-enter the 4-6 digit PIN used when creating this backup.');
+  }
+
+  if (!decryptedJson || decryptedJson.trim() === '') {
+    throw new Error('Incorrect PIN. Please re-enter the 4-6 digit PIN used when creating this backup.');
+  }
+
+  let payload: DecryptedBackupData;
+  try {
+    payload = JSON.parse(decryptedJson);
+  } catch {
+    throw new Error('Failed to parse decrypted data. The backup file may be corrupted.');
+  }
+
+  if (!payload.data || typeof payload.data !== 'object') {
+    throw new Error('Backup contents are incomplete or missing domain tables.');
+  }
+
+  return payload;
+}
+
+/**
+ * Exports SQLite database to a password-encrypted .neon file and triggers
+ * the Android native Save/Share sheet to store it in Downloads, Documents, or Google Drive.
+ */
+export async function exportEncryptedBackupFile(db: SQLiteDatabase, pin: string): Promise<BackupResult> {
+  try {
+    const cleanPin = pin.trim();
+    if (cleanPin.length < 4) {
+      return { success: false, totalRecords: 0, error: 'PIN must be at least 4 digits.' };
     }
 
-    const payload: BackupPayload = {
-      version: 1,
-      appName: 'Neon Rent Manager',
-      exportedAt: new Date().toISOString(),
-      totalRecords,
-      data: backupData,
-    };
+    const { snapshot, totalRecords } = await dumpDatabaseSnapshot(db);
+    const container = encryptSnapshot(snapshot, cleanPin);
+    const containerJson = JSON.stringify(container, null, 2);
 
-    const jsonString = JSON.stringify(payload, null, 2);
-    const dateStamp = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+    const fileName = `NeonBackup_${dateStr}_${timeStr}.neon`;
 
-    await Share.share({
-      title: `Neon_Rent_Manager_Backup_${dateStamp}.json`,
-      message: jsonString,
+    const targetDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+    const fileUri = `${targetDir}${fileName}`;
+
+    await FileSystem.writeAsStringAsync(fileUri, containerJson, {
+      encoding: FileSystem.EncodingType.UTF8,
     });
+
+    const isAvailable = await Sharing.isAvailableAsync();
+    if (isAvailable) {
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'application/octet-stream',
+        dialogTitle: 'Save Encrypted Neon Backup',
+      });
+    }
 
     return {
       success: true,
       totalRecords,
+      fileName,
     };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -79,27 +185,88 @@ export async function exportLocalBackup(db: SQLiteDatabase): Promise<BackupResul
 }
 
 /**
- * Validates and restores local data from a JSON backup string into SQLite.
- * Uses INSERT OR REPLACE to safely merge/update records without dropping foreign keys.
+ * Opens native Android Document Picker to choose a .neon file and reads its content.
  */
-export async function restoreLocalBackup(db: SQLiteDatabase, jsonString: string): Promise<RestoreResult> {
+export async function pickBackupFile(): Promise<{
+  canceled: boolean;
+  fileContent?: string;
+  fileName?: string;
+  error?: string;
+}> {
   try {
-    const trimmed = jsonString.trim();
-    if (!trimmed) {
-      return { success: false, totalRestored: 0, error: 'Backup text is empty.' };
+    const result = await DocumentPicker.getDocumentAsync({
+      type: '*/*',
+      copyToCacheDirectory: true,
+    });
+
+    if (result.canceled || !result.assets || result.assets.length === 0) {
+      return { canceled: true };
     }
 
-    let payload: BackupPayload;
-    try {
-      payload = JSON.parse(trimmed);
-    } catch {
-      return { success: false, totalRestored: 0, error: 'Invalid JSON format. Please ensure the full backup text was copied.' };
+    const asset = result.assets[0];
+    const fileContent = await FileSystem.readAsStringAsync(asset.uri, {
+      encoding: FileSystem.EncodingType.UTF8,
+    });
+
+    return {
+      canceled: false,
+      fileContent,
+      fileName: asset.name,
+    };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      canceled: false,
+      error: message,
+    };
+  }
+}
+
+/**
+ * Opens native Android Document Picker to choose a .neon file, reads it,
+ * and decrypts it with the provided PIN.
+ */
+export async function pickAndDecryptBackupFile(pin: string): Promise<{
+  success: boolean;
+  data?: DecryptedBackupData;
+  fileName?: string;
+  error?: string;
+  canceled?: boolean;
+}> {
+  try {
+    const pickResult = await pickBackupFile();
+    if (pickResult.canceled) {
+      return { success: false, canceled: true };
+    }
+    if (pickResult.error || !pickResult.fileContent) {
+      return { success: false, error: pickResult.error || 'Failed to read file.' };
     }
 
-    if (!payload.data || typeof payload.data !== 'object') {
-      return { success: false, totalRestored: 0, error: 'Unrecognized backup structure. Missing table data.' };
-    }
+    const decrypted = decryptSnapshot(pickResult.fileContent, pin);
 
+    return {
+      success: true,
+      data: decrypted,
+      fileName: pickResult.fileName,
+    };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      success: false,
+      error: message,
+    };
+  }
+}
+
+/**
+ * Safely inserts or replaces decrypted domain records into SQLite tables
+ * within an atomic transaction.
+ */
+export async function restoreDecryptedPayload(
+  db: SQLiteDatabase,
+  payload: DecryptedBackupData
+): Promise<RestoreResult> {
+  try {
     let totalRestored = 0;
 
     await db.execAsync('BEGIN TRANSACTION');
