@@ -1,4 +1,17 @@
 import { SQLiteDatabase } from 'expo-sqlite';
+import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
+
+// Set up the foreground notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export type AlertType = 'due_today' | 'overdue' | 'expiring_contract';
 
@@ -10,6 +23,35 @@ export interface RentalAlert {
   severity: 'warning' | 'error' | 'info';
   date: string;
   targetId: string;
+}
+
+/**
+ * Ensures notification channels exist on Android and requests notification permissions.
+ */
+export async function requestNotificationPermissions(): Promise<boolean> {
+  try {
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('rent-reminders', {
+        name: 'Rent Reminders',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#2563EB',
+      });
+    }
+
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    return finalStatus === 'granted';
+  } catch (e) {
+    console.error('[Notifications] Failed to request permissions:', e);
+    return false;
+  }
 }
 
 /**
@@ -122,4 +164,107 @@ export async function getActiveAlerts(db: SQLiteDatabase): Promise<RentalAlert[]
   }
 
   return alerts;
+}
+
+/**
+ * Builds a friendly, non-intrusive notification summary message.
+ */
+function buildNotificationSummary(alerts: RentalAlert[]): { title: string; body: string } | null {
+  if (alerts.length === 0) return null;
+
+  const dueToday = alerts.filter(a => a.type === 'due_today');
+  const overdue = alerts.filter(a => a.type === 'overdue');
+  const expiring = alerts.filter(a => a.type === 'expiring_contract');
+
+  let title = 'Neon Rent Manager';
+  let body = '';
+
+  if (dueToday.length > 0 && overdue.length > 0) {
+    title = 'Rent Due & Overdue';
+    body = `You have ${dueToday.length} rent payment(s) due today and ${overdue.length} overdue.`;
+  } else if (dueToday.length > 0) {
+    title = 'Rent Due Today';
+    body = dueToday.length === 1 
+      ? dueToday[0].title + ': ' + dueToday[0].subtitle
+      : `You have ${dueToday.length} rent payments due today.`;
+  } else if (overdue.length > 0) {
+    title = 'Overdue Rent Alert';
+    body = overdue.length === 1
+      ? overdue[0].title + ': ' + overdue[0].subtitle
+      : `You have ${overdue.length} rent payments currently overdue.`;
+  } else if (expiring.length > 0) {
+    title = 'Contract Approaching Expiry';
+    body = expiring.length === 1
+      ? expiring[0].title + ': ' + expiring[0].subtitle
+      : `${expiring.length} rental agreements are expiring within the next 30 days.`;
+  }
+
+  return { title, body };
+}
+
+/**
+ * Schedules a daily reminder notification at 9:00 AM on Android.
+ * Automatically clears duplicate notifications before scheduling.
+ */
+export async function scheduleDailyRentNotification(db: SQLiteDatabase): Promise<void> {
+  try {
+    const granted = await requestNotificationPermissions();
+    if (!granted) return;
+
+    // Cancel previously scheduled reminders to prevent stacking
+    await Notifications.cancelAllScheduledNotificationsAsync();
+
+    const alerts = await getActiveAlerts(db);
+    const summary = buildNotificationSummary(alerts);
+    if (!summary) return;
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: summary.title,
+        body: summary.body,
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour: 9,
+        minute: 0,
+      },
+    });
+
+    console.log('[Notifications] Daily rent notification scheduled for 9:00 AM.');
+  } catch (e) {
+    console.error('[Notifications] Failed to schedule daily notification:', e);
+  }
+}
+
+/**
+ * Triggers an immediate notification in the Android status bar (useful for manual testing & immediate alert).
+ */
+export async function triggerImmediateRentNotification(db: SQLiteDatabase): Promise<boolean> {
+  try {
+    const granted = await requestNotificationPermissions();
+    if (!granted) return false;
+
+    const alerts = await getActiveAlerts(db);
+    const summary = buildNotificationSummary(alerts);
+
+    const title = summary ? summary.title : 'Neon Rent Manager';
+    const body = summary 
+      ? summary.body 
+      : 'All rents are up to date! No payments are due today or overdue.';
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title,
+        body,
+        sound: true,
+      },
+      trigger: null, // null means trigger immediately
+    });
+
+    return true;
+  } catch (e) {
+    console.error('[Notifications] Failed to trigger immediate notification:', e);
+    return false;
+  }
 }

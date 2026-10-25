@@ -4,6 +4,7 @@ import { RentPeriod } from '@/types/rent';
 import { Contract } from '@/types/contract';
 import { syncRentPeriodStatuses, generateRentPeriodsForContract } from '@/lib/repositories/rentPeriods';
 import { syncContractStatuses } from '@/lib/repositories/contracts';
+import { scheduleDailyRentNotification } from '@/lib/notifications';
 
 export type DashboardRentPeriod = RentPeriod & { tenantName: string; unitName: string };
 export type DashboardPayment = {
@@ -45,6 +46,9 @@ export function useDashboard(year: number, month: number) {
 
       // 3. Sync statuses based on current date before querying
       await syncRentPeriodStatuses(db);
+
+      // 4. Update daily local notification schedule based on current alerts
+      await scheduleDailyRentNotification(db);
 
       // 4. Fetch rent periods for current year/month
       const rentPeriods = await db.getAllAsync<RentPeriod>(
