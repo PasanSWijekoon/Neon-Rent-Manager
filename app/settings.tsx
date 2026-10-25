@@ -396,7 +396,10 @@ export default function SettingsScreen() {
                   if (sent) {
                     Alert.alert("Notification Sent", "A rent alert notification was sent to your status bar.");
                   } else {
-                    Alert.alert("Permission Needed", "Please allow notifications in Android settings to receive alerts.");
+                    Alert.alert(
+                      "Notification Notice",
+                      "System tray notifications are designed for production and standalone development builds (npx expo run:android). Inside Expo Go, in-app Rent Alerts and reminders remain fully active!"
+                    );
                   }
                 }}
                 className="mt-4 bg-blue-50 py-3.5 rounded-xl items-center border border-blue-200 flex-row justify-center"

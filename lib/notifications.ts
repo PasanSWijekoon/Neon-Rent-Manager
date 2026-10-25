@@ -1,17 +1,5 @@
 import { SQLiteDatabase } from 'expo-sqlite';
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-
-// Set up the foreground notification handler
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
 
 export type AlertType = 'due_today' | 'overdue' | 'expiring_contract';
 
@@ -25,10 +13,46 @@ export interface RentalAlert {
   targetId: string;
 }
 
+// Cached reference to expo-notifications loaded dynamically
+let _notificationsModule: typeof import('expo-notifications') | null = null;
+let _notificationsChecked = false;
+
+/**
+ * Safely loads the native expo-notifications module.
+ * In Expo Go on Android (SDK 53+), native notification modules are omitted,
+ * so we catch and prevent root-level bundle crash while allowing dev-client/production to work.
+ */
+function getNotificationsModule(): typeof import('expo-notifications') | null {
+  if (_notificationsChecked) return _notificationsModule;
+  _notificationsChecked = true;
+  try {
+    // Dynamic require so module evaluation doesn't break Expo Go during root bundle load
+    const mod = require('expo-notifications') as typeof import('expo-notifications');
+    mod.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+    _notificationsModule = mod;
+    return mod;
+  } catch {
+    console.log('[Notifications] System notifications are not bundled in Expo Go. In-app alerts remain active.');
+    _notificationsModule = null;
+    return null;
+  }
+}
+
 /**
  * Ensures notification channels exist on Android and requests notification permissions.
  */
 export async function requestNotificationPermissions(): Promise<boolean> {
+  const Notifications = getNotificationsModule();
+  if (!Notifications) return false;
+
   try {
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('rent-reminders', {
@@ -207,6 +231,9 @@ function buildNotificationSummary(alerts: RentalAlert[]): { title: string; body:
  * Automatically clears duplicate notifications before scheduling.
  */
 export async function scheduleDailyRentNotification(db: SQLiteDatabase): Promise<void> {
+  const Notifications = getNotificationsModule();
+  if (!Notifications) return;
+
   try {
     const granted = await requestNotificationPermissions();
     if (!granted) return;
@@ -241,6 +268,9 @@ export async function scheduleDailyRentNotification(db: SQLiteDatabase): Promise
  * Triggers an immediate notification in the Android status bar (useful for manual testing & immediate alert).
  */
 export async function triggerImmediateRentNotification(db: SQLiteDatabase): Promise<boolean> {
+  const Notifications = getNotificationsModule();
+  if (!Notifications) return false;
+
   try {
     const granted = await requestNotificationPermissions();
     if (!granted) return false;
