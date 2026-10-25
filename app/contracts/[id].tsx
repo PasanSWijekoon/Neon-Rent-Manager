@@ -9,9 +9,11 @@ import { colors } from '@/constants/theme';
 import { getContract, updateContract, checkUnitOccupiedToday } from '@/lib/repositories/contracts';
 import { getTenant } from '@/lib/repositories/tenants';
 import { getUnitById, updateUnit } from '@/lib/repositories/units';
+import { getRentPeriodsForContract } from '@/lib/repositories/rentPeriods';
 import { Contract } from '@/types/contract';
 import { Tenant } from '@/types/tenant';
 import { Unit } from '@/types/unit';
+import { RentPeriod } from '@/types/rent';
 
 export default function ContractDetailsScreen() {
   const router = useRouter();
@@ -23,7 +25,7 @@ export default function ContractDetailsScreen() {
   const [contract, setContract] = useState<Contract | null>(null);
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [unit, setUnit] = useState<Unit | null>(null);
-  const [rentPeriods, setRentPeriods] = useState<any[]>([]);
+  const [rentPeriods, setRentPeriods] = useState<RentPeriod[]>([]);
 
   const loadData = useCallback(async () => {
     if (!id) return;
@@ -35,9 +37,9 @@ export default function ContractDetailsScreen() {
         setTenant(t);
         const u = await getUnitById(db, c.unitId);
         setUnit(u);
-        const { getRentPeriodsForContract } = require('@/lib/repositories/rentPeriods');
         const periods = await getRentPeriodsForContract(db, c.id);
-        setRentPeriods(periods);
+        const historyPeriods = periods.filter(rp => rp.status !== 'upcoming');
+        setRentPeriods(historyPeriods);
       }
     } catch (e) {
       console.error(e);
@@ -235,15 +237,18 @@ export default function ContractDetailsScreen() {
                       </Text>
                     </View>
                   </View>
-                  <View className="items-end">
-                    <Text className="font-poppins-bold text-sm text-[#1E293B] mb-1">
-                      Bal: LKR {(rp.amountDue - rp.amountPaid).toLocaleString()}
-                    </Text>
-                    <View className="bg-slate-100 px-2 py-0.5 rounded-sm">
-                      <Text className="font-poppins-semibold text-[8px] uppercase text-slate-500">
-                        {rp.status.replace('_', ' ')}
+                  <View className="flex-row items-center">
+                    <View className="items-end mr-3">
+                      <Text className="font-poppins-bold text-sm text-[#1E293B] mb-1">
+                        Bal: LKR {(rp.amountDue - rp.amountPaid).toLocaleString()}
                       </Text>
+                      <View className="bg-slate-100 px-2 py-0.5 rounded-sm">
+                        <Text className="font-poppins-semibold text-[8px] uppercase text-slate-500">
+                          {rp.status.replace('_', ' ')}
+                        </Text>
+                      </View>
                     </View>
+                    <Feather name="chevron-right" size={16} color="#CBD5E1" />
                   </View>
                 </Card>
               </TouchableOpacity>
