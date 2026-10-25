@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { colors } from '@/constants/theme';
 import { getRentPeriodById } from '@/lib/repositories/rentPeriods';
-import { getPaymentsForRentPeriod } from '@/lib/repositories/payments';
+import { getPaymentsForRentPeriod, reversePayment } from '@/lib/repositories/payments';
 import { getContract } from '@/lib/repositories/contracts';
 import { getTenant } from '@/lib/repositories/tenants';
 import { getUnitById } from '@/lib/repositories/units';
@@ -73,6 +73,31 @@ export default function RentPeriodDetailsScreen() {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const handleReversePayment = (payment: Payment) => {
+    Alert.alert(
+      'Reverse Payment',
+      `Are you sure you want to reverse this payment of LKR ${payment.amount.toLocaleString()}? This will restore the balance on this rent period.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reverse',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await reversePayment(db, payment.id);
+              await loadData();
+            } catch (e: any) {
+              console.error(e);
+              Alert.alert('Error', e?.message || 'Failed to reverse payment.');
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const getMonthName = (month: number) => {
@@ -200,7 +225,7 @@ export default function RentPeriodDetailsScreen() {
           </View>
         ) : (
           payments.map(p => (
-            <Card key={p.id} className="mb-3 p-4 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
+            <Card key={p.id} className="mb-3 p-3.5 bg-surface border-0 rounded-2xl shadow-sm flex-row items-center justify-between">
               <View className="flex-row items-center flex-1">
                 <View className="w-10 h-10 rounded-full bg-emerald-50 items-center justify-center mr-3">
                   <Text className="font-poppins-bold text-[#10B981] text-xs">Rs.</Text>
@@ -214,9 +239,18 @@ export default function RentPeriodDetailsScreen() {
                   </Text>
                 </View>
               </View>
-              <Text className="font-poppins-bold text-sm text-[#1E293B]">
-                LKR {p.amount.toLocaleString()}
-              </Text>
+              <View className="flex-row items-center">
+                <Text className="font-poppins-bold text-sm text-[#1E293B] mr-3">
+                  LKR {p.amount.toLocaleString()}
+                </Text>
+                <TouchableOpacity 
+                  onPress={() => handleReversePayment(p)}
+                  className="w-8 h-8 rounded-full bg-red-50 items-center justify-center"
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Feather name="trash-2" size={14} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
             </Card>
           ))
         )}

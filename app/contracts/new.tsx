@@ -7,9 +7,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSQLiteContext } from 'expo-sqlite';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { colors } from '@/constants/theme';
-import { createContract, checkContractOverlap } from '@/lib/repositories/contracts';
+import { createContract, checkContractOverlap, getContract, updateContract } from '@/lib/repositories/contracts';
 import { generateRentPeriodsForContract } from '@/lib/repositories/rentPeriods';
-import { getTenants } from '@/lib/repositories/tenants';
+import { getTenants, getTenant } from '@/lib/repositories/tenants';
 import { getUnitById, updateUnit } from '@/lib/repositories/units';
 import { Tenant } from '@/types/tenant';
 import { Unit } from '@/types/unit';
@@ -17,7 +17,7 @@ import { Contract } from '@/types/contract';
 
 export default function NewContractScreen() {
   const router = useRouter();
-  const { unitId } = useLocalSearchParams<{ unitId: string }>();
+  const { unitId: paramUnitId, renewFromId } = useLocalSearchParams<{ unitId?: string; renewFromId?: string }>();
   const db = useSQLiteContext();
   
   const [loading, setLoading] = useState(true);
@@ -64,9 +64,16 @@ export default function NewContractScreen() {
   useFocusEffect(
     useCallback(() => {
       async function loadData() {
-        if (!unitId) return;
         try {
-          const u = await getUnitById(db, unitId);
+          let prevContract: Contract | null = null;
+          if (renewFromId) {
+            prevContract = await getContract(db, renewFromId);
+          }
+
+          const targetUnitId = paramUnitId || prevContract?.unitId;
+          if (!targetUnitId) return;
+
+          const u = await getUnitById(db, targetUnitId);
           if (u) {
             setUnit(u);
           }
@@ -75,6 +82,32 @@ export default function NewContractScreen() {
             .filter(t => !t.archivedAt)
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           setTenants(activeTenants);
+
+          if (prevContract) {
+            const prevTenant = activeTenants.find(t => t.id === prevContract!.tenantId) || 
+              (await getTenant(db, prevContract.tenantId));
+            if (prevTenant) setSelectedTenant(prevTenant);
+            setRent(prevContract.monthlyRent.toString());
+            setDeposit(prevContract.deposit ? prevContract.deposit.toString() : '');
+
+            // Calculate continuation dates
+            let nextStart = new Date().toISOString().split('T')[0];
+            if (prevContract.endDate) {
+              const prevEndDate = new Date(prevContract.endDate);
+              prevEndDate.setDate(prevEndDate.getDate() + 1);
+              nextStart = prevEndDate.toISOString().split('T')[0];
+            }
+            setStartDate(nextStart);
+
+            // Default end date to 1 year ahead
+            const [startY, startM, startD] = nextStart.split('-').map(Number);
+            const nextEndStr = `${startY + 1}-${String(startM).padStart(2, '0')}-${String(startD).padStart(2, '0')}`;
+            setEndDate(nextEndStr);
+
+            // Default due date using previous dueDay
+            const dueDayStr = String(prevContract.dueDay).padStart(2, '0');
+            setDueDate(`${startY}-${String(startM).padStart(2, '0')}-${dueDayStr}`);
+          }
         } catch (e) {
           console.error(e);
         } finally {
@@ -82,7 +115,7 @@ export default function NewContractScreen() {
         }
       }
       loadData();
-    }, [unitId, db])
+    }, [paramUnitId, renewFromId, db])
   );
 
   const validateDate = (dateString: string) => {
@@ -93,7 +126,8 @@ export default function NewContractScreen() {
   };
 
   const handleSave = async () => {
-    if (!unitId) return;
+    const activeUnitId = unit?.id || paramUnitId;
+    if (!activeUnitId) return;
     if (!selectedTenant) {
       Alert.alert('Validation Error', 'Please select a tenant.');
       return;
@@ -122,16 +156,16 @@ export default function NewContractScreen() {
     }
 
     Alert.alert(
-      "Confirm Contract",
-      `Are you sure you want to create a contract for ${selectedTenant.name} at LKR ${rentNum.toLocaleString()} per month?`,
+      renewFromId ? "Confirm Renewal" : "Confirm Contract",
+      `Are you sure you want to ${renewFromId ? 'renew the' : 'create a'} contract for ${selectedTenant.name} at LKR ${rentNum.toLocaleString()} per month?`,
       [
         { text: "Cancel", style: "cancel" },
         { 
-          text: "Create", 
+          text: renewFromId ? "Renew" : "Create", 
           onPress: async () => {
             setSaving(true);
             try {
-              const isOverlap = await checkContractOverlap(db, unitId, startDate, endDate);
+              const isOverlap = await checkContractOverlap(db, activeUnitId, startDate, endDate, renewFromId);
               if (isOverlap) {
                 Alert.alert('Unit at Capacity', 'This unit has reached its maximum tenant capacity for the selected period.');
                 setSaving(false);
@@ -143,7 +177,7 @@ export default function NewContractScreen() {
               const depositNum = deposit ? parseInt(deposit.replace(/\D/g, ''), 10) : 0;
               const newContract: Contract = {
                 id: Math.random().toString(36).substring(2, 10) + Date.now().toString(36),
-                unitId,
+                unitId: activeUnitId,
                 tenantId: selectedTenant.id,
                 startDate,
                 endDate,
@@ -157,7 +191,15 @@ export default function NewContractScreen() {
               };
 
               await createContract(db, newContract);
-              await updateUnit(db, unitId, { status: 'occupied', updatedAt: now });
+
+              if (renewFromId) {
+                await updateContract(db, renewFromId, {
+                  status: 'renewed',
+                  updatedAt: now,
+                });
+              }
+
+              await updateUnit(db, activeUnitId, { status: 'occupied', updatedAt: now });
               await generateRentPeriodsForContract(db, newContract);
               router.back();
             } catch (e) {
@@ -193,11 +235,24 @@ export default function NewContractScreen() {
         <TouchableOpacity onPress={() => router.back()} className="mr-3 p-1">
           <Feather name="arrow-left" size={24} color="#1E293B" />
         </TouchableOpacity>
-        <Text className="font-poppins-semibold text-lg text-[#1E293B]">New Contract</Text>
+        <Text className="font-poppins-semibold text-lg text-[#1E293B]">
+          {renewFromId ? 'Renew Contract' : 'New Contract'}
+        </Text>
       </View>
 
       <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 100 }}>
         
+        {renewFromId && (
+          <View className="mb-4 p-3.5 bg-blue-50 border border-blue-200 rounded-2xl flex-row items-center">
+            <View className="w-8 h-8 rounded-full bg-blue-100 items-center justify-center mr-3">
+              <MaterialCommunityIcons name="refresh" size={18} color="#2563EB" />
+            </View>
+            <Text className="text-blue-800 font-poppins-medium text-xs flex-1 leading-relaxed">
+              Renewing contract terms. The historical contract and previous payments will remain permanently preserved.
+            </Text>
+          </View>
+        )}
+
         <View className="mb-6 flex-row items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
           <View className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${unit.type === 'shop' ? 'bg-purple-100' : 'bg-blue-100'}`}>
             <Feather name={unit.type === 'shop' ? 'briefcase' : 'home'} size={20} color={unit.type === 'shop' ? '#9333EA' : '#3B82F6'} />

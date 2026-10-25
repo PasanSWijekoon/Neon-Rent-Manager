@@ -251,9 +251,28 @@ export default function ContractDetailsScreen() {
           </View>
         )}
 
+        {(isActive || contract.status === 'expired') && (
+          <TouchableOpacity 
+            className="mt-2 py-4 rounded-xl items-center flex-row justify-center bg-blue-600 mb-3"
+            onPress={() => router.push(`/contracts/new?unitId=${contract.unitId}&renewFromId=${contract.id}` as Href)}
+          >
+            <MaterialCommunityIcons name="autorenew" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Text className="font-poppins-semibold text-sm text-white">Renew Contract</Text>
+          </TouchableOpacity>
+        )}
+
+        {contract.status === 'renewed' && (
+          <View className="mt-2 p-3.5 bg-blue-50 border border-blue-200 rounded-2xl flex-row items-center justify-center mb-3">
+            <MaterialCommunityIcons name="check-decagram" size={18} color="#2563EB" style={{ marginRight: 8 }} />
+            <Text className="text-blue-700 font-poppins-medium text-xs">
+              This contract has been renewed with a new active agreement.
+            </Text>
+          </View>
+        )}
+
         {isActive && (
           <TouchableOpacity 
-            className={`mt-2 py-4 rounded-xl items-center flex-row justify-center ${ending ? 'bg-slate-100' : 'bg-red-50'}`}
+            className={`py-4 rounded-xl items-center flex-row justify-center ${ending ? 'bg-slate-100' : 'bg-red-50'}`}
             onPress={handleEndContract}
             disabled={ending}
           >
@@ -261,7 +280,7 @@ export default function ContractDetailsScreen() {
               <ActivityIndicator size="small" color="#64748B" />
             ) : (
               <>
-                <Feather name="x-circle" size={16} color="#EF4444" className="mr-2" />
+                <Feather name="x-circle" size={16} color="#EF4444" style={{ marginRight: 8 }} />
                 <Text className="font-poppins-semibold text-sm text-red-500">End Contract</Text>
               </>
             )}

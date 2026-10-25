@@ -38,18 +38,27 @@ export async function updateContract(db: SQLite.SQLiteDatabase, id: string, data
   await db.runAsync(`UPDATE contracts SET ${updates.join(', ')} WHERE id = ?`, args);
 }
 
-export async function checkContractOverlap(db: SQLite.SQLiteDatabase, unitId: string, startDate: string, endDate: string | null): Promise<boolean> {
+export async function checkContractOverlap(
+  db: SQLite.SQLiteDatabase, 
+  unitId: string, 
+  startDate: string, 
+  endDate: string | null,
+  excludeContractId?: string
+): Promise<boolean> {
   const query = `
     SELECT 
       (SELECT count(*) FROM contracts 
        WHERE unitId = ? 
-       AND status NOT IN ('terminated') 
+       AND status NOT IN ('terminated', 'renewed', 'expired') 
+       AND (? IS NULL OR id != ?)
        AND startDate < COALESCE(?, '9999-12-31')
        AND COALESCE(endDate, '9999-12-31') > ?) as active_count,
       (SELECT capacity FROM units WHERE id = ?) as capacity
   `;
   const result = await db.getFirstAsync<{active_count: number, capacity: number}>(query, [
     unitId, 
+    excludeContractId || null,
+    excludeContractId || null,
     endDate,
     startDate,
     unitId
