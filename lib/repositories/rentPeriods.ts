@@ -108,7 +108,7 @@ export async function getRentPeriodsWithDetails(db: SQLite.SQLiteDatabase): Prom
     SELECT r.*, 
            c.id as c_id, c.unitId as c_unitId, c.tenantId as c_tenantId, c.startDate as c_startDate, c.endDate as c_endDate, c.monthlyRent as c_monthlyRent, c.dueDay as c_dueDay, c.deposit as c_deposit, c.status as c_status, c.notes as c_notes, c.createdAt as c_createdAt, c.updatedAt as c_updatedAt,
            t.id as t_id, t.name as t_name, t.phone as t_phone, t.address as t_address, t.notes as t_notes, t.createdAt as t_createdAt, t.updatedAt as t_updatedAt, t.archivedAt as t_archivedAt,
-           u.id as u_id, u.propertyId as u_propertyId, u.type as u_type, u.name as u_name, u.status as u_status, u.currentContractId as u_currentContractId, u.createdAt as u_createdAt, u.updatedAt as u_updatedAt
+           u.id as u_id, u.propertyId as u_propertyId, u.type as u_type, u.name as u_name, u.status as u_status, u.currentContractId as u_currentContractId, u.capacity as u_capacity, u.createdAt as u_createdAt, u.updatedAt as u_updatedAt
     FROM rent_periods r
     JOIN contracts c ON r.contractId = c.id
     JOIN tenants t ON c.tenantId = t.id
@@ -120,7 +120,7 @@ export async function getRentPeriodsWithDetails(db: SQLite.SQLiteDatabase): Prom
     const { 
       c_id, c_unitId, c_tenantId, c_startDate, c_endDate, c_monthlyRent, c_dueDay, c_deposit, c_status, c_notes, c_createdAt, c_updatedAt,
       t_id, t_name, t_phone, t_address, t_notes, t_createdAt, t_updatedAt, t_archivedAt,
-      u_id, u_propertyId, u_type, u_name, u_status, u_currentContractId, u_createdAt, u_updatedAt,
+      u_id, u_propertyId, u_type, u_name, u_status, u_currentContractId, u_capacity, u_createdAt, u_updatedAt,
       ...rentPeriod 
     } = row;
 
@@ -131,7 +131,7 @@ export async function getRentPeriodsWithDetails(db: SQLite.SQLiteDatabase): Prom
       id: t_id, name: t_name, phone: t_phone, address: t_address, notes: t_notes, createdAt: t_createdAt, updatedAt: t_updatedAt, archivedAt: t_archivedAt
     };
     const unit: Unit = {
-      id: u_id, propertyId: u_propertyId, type: u_type, name: u_name, status: u_status, currentContractId: u_currentContractId, createdAt: u_createdAt, updatedAt: u_updatedAt
+      id: u_id, propertyId: u_propertyId, type: u_type, name: u_name, status: u_status, currentContractId: u_currentContractId, capacity: u_capacity ?? 1, createdAt: u_createdAt, updatedAt: u_updatedAt
     };
     
     return { ...rentPeriod, contract, tenant, unit };

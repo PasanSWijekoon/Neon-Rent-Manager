@@ -2,6 +2,7 @@ import { initializeApp, getApp, getApps } from 'firebase/app';
 import type { FirebaseApp } from 'firebase/app';
 // @ts-ignore - type definition is missing in newer Firebase versions
 import { getFirestore } from 'firebase/firestore';
+// @ts-ignore - getReactNativePersistence is exported in the React Native entrypoint of firebase/auth
 import { initializeAuth, getReactNativePersistence, getAuth } from 'firebase/auth';
 import type { Auth } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';

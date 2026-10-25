@@ -46,6 +46,7 @@ export async function runDatabaseTests() {
       name: 'Shop 3',
       status: 'occupied',
       currentContractId: null,
+      capacity: 1,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
