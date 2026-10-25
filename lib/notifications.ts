@@ -1,5 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 import { Platform } from 'react-native';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 
 export type AlertType = 'due_today' | 'overdue' | 'expiring_contract';
 
@@ -18,15 +19,49 @@ let _notificationsModule: typeof import('expo-notifications') | null = null;
 let _notificationsChecked = false;
 
 /**
+ * Checks whether the app is executing inside the Expo Go client on Android.
+ * In Expo Go on Android (SDK 53+), native notification modules (such as ExpoTopicSubscriptionModule)
+ * are omitted from the client binary, causing require('expo-notifications') to throw.
+ */
+function isExpoGoAndroid(): boolean {
+  if (Platform.OS !== 'android') return false;
+
+  if (
+    Constants.appOwnership === 'expo' ||
+    Constants.executionEnvironment === ExecutionEnvironment.StoreClient ||
+    Boolean(Constants.expoVersion)
+  ) {
+    return true;
+  }
+
+  try {
+    const expoModules = (globalThis as unknown as { expo?: { modules?: Record<string, unknown> } }).expo?.modules;
+    if (expoModules && typeof expoModules === 'object' && !expoModules.ExpoTopicSubscriptionModule) {
+      return true;
+    }
+  } catch {
+    // Ignore error
+  }
+
+  return false;
+}
+
+/**
  * Safely loads the native expo-notifications module.
- * In Expo Go on Android (SDK 53+), native notification modules are omitted,
- * so we catch and prevent root-level bundle crash while allowing dev-client/production to work.
+ * If running inside Expo Go on Android, native notifications are skipped so
+ * no native module crash occurs. Production APKs and EAS dev builds load normally.
  */
 function getNotificationsModule(): typeof import('expo-notifications') | null {
   if (_notificationsChecked) return _notificationsModule;
   _notificationsChecked = true;
+
+  if (isExpoGoAndroid()) {
+    _notificationsModule = null;
+    return null;
+  }
+
   try {
-    // Dynamic require so module evaluation doesn't break Expo Go during root bundle load
+    // Dynamic require so module evaluation doesn't break root bundle load
     const mod = require('expo-notifications') as typeof import('expo-notifications');
     mod.setNotificationHandler({
       handleNotification: async () => ({
@@ -40,7 +75,6 @@ function getNotificationsModule(): typeof import('expo-notifications') | null {
     _notificationsModule = mod;
     return mod;
   } catch {
-    console.log('[Notifications] System notifications are not bundled in Expo Go. In-app alerts remain active.');
     _notificationsModule = null;
     return null;
   }
