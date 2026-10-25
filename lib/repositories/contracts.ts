@@ -68,3 +68,32 @@ export async function checkUnitOccupiedToday(db: SQLite.SQLiteDatabase, unitId: 
   const result = await db.getFirstAsync<{count: number}>(query, [unitId, today, today]);
   return (result?.count || 0) > 0;
 }
+
+export async function syncContractStatuses(db: SQLite.SQLiteDatabase): Promise<void> {
+  const today = new Date().toISOString().split('T')[0];
+  const now = new Date().toISOString();
+
+  // Find all active contracts that have passed their endDate
+  const expiredContracts = await db.getAllAsync<{ id: string; unitId: string }>(
+    `SELECT id, unitId FROM contracts WHERE status = 'active' AND endDate IS NOT NULL AND endDate < ?`,
+    [today]
+  );
+
+  if (expiredContracts.length === 0) return;
+
+  // Update their status to 'expired'
+  await db.runAsync(
+    `UPDATE contracts SET status = 'expired', updatedAt = ? WHERE status = 'active' AND endDate IS NOT NULL AND endDate < ?`,
+    [now, today]
+  );
+
+  // For all affected units, check if they are still occupied today by another active contract
+  const affectedUnitIds = Array.from(new Set(expiredContracts.map(c => c.unitId)));
+  for (const unitId of affectedUnitIds) {
+    const isStillOccupied = await checkUnitOccupiedToday(db, unitId);
+    await db.runAsync(
+      `UPDATE units SET status = ?, updatedAt = ? WHERE id = ?`,
+      [isStillOccupied ? 'occupied' : 'vacant', now, unitId]
+    );
+  }
+}

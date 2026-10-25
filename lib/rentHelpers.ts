@@ -11,10 +11,6 @@ export function getRentPeriodStatus(
     return 'paid';
   }
 
-  if (amountPaid > 0) {
-    return 'partial';
-  }
-
   const now = new Date();
   const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
   
@@ -26,6 +22,10 @@ export function getRentPeriodStatus(
 
   if (diffDays < 0) {
     return 'overdue';
+  }
+
+  if (amountPaid > 0) {
+    return 'partial';
   }
 
   if (diffDays === 0) {

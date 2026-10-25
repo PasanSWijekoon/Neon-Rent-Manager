@@ -7,7 +7,8 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { typography, colors } from '@/constants/theme';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
-import { getRentPeriodsWithDetails, generateRentPeriodsForContract, RentPeriodWithDetails } from '@/lib/repositories/rentPeriods';
+import { getRentPeriodsWithDetails, generateRentPeriodsForContract, syncRentPeriodStatuses, RentPeriodWithDetails } from '@/lib/repositories/rentPeriods';
+import { syncContractStatuses } from '@/lib/repositories/contracts';
 import { Contract } from '@/types/contract';
 
 export default function Payments() {
@@ -27,13 +28,16 @@ export default function Payments() {
     try {
       setLoading(true);
       
-      // Auto-generate missing rent periods for active contracts
+      // 1. Sync contract expirations and unit occupancies based on current date
+      await syncContractStatuses(db);
+
+      // 2. Auto-generate missing rent periods for active contracts
       const activeContracts = await db.getAllAsync<Contract>('SELECT * FROM contracts WHERE status = ?', ['active']);
       for (const contract of activeContracts) {
         await generateRentPeriodsForContract(db, contract);
       }
 
-      const { syncRentPeriodStatuses } = require('@/lib/repositories/rentPeriods');
+      // 3. Sync statuses based on current date
       await syncRentPeriodStatuses(db);
 
       const periods = await getRentPeriodsWithDetails(db);

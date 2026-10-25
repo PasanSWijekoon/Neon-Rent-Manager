@@ -75,7 +75,15 @@ export async function generateRentPeriodsForContract(db: SQLite.SQLiteDatabase, 
       const yyyy = dueDateObj.getFullYear();
       const mm = String(dueDateObj.getMonth() + 1).padStart(2, '0');
       const dd = String(dueDateObj.getDate()).padStart(2, '0');
-      const dueDate = `${yyyy}-${mm}-${dd}`;
+      let dueDate = `${yyyy}-${mm}-${dd}`;
+      
+      // If this is the starting month and the standard due day falls before startDate,
+      // clamp dueDate to startDate so it is not falsely marked overdue on the day the tenant moves in.
+      if (year === start.getFullYear() && month === start.getMonth() + 1) {
+        if (dueDate < contract.startDate) {
+          dueDate = contract.startDate;
+        }
+      }
       
       const status = getRentPeriodStatus(dueDate, contract.monthlyRent, 0);
       const now = new Date().toISOString();

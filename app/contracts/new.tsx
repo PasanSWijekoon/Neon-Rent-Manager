@@ -8,6 +8,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { colors } from '@/constants/theme';
 import { createContract, checkContractOverlap } from '@/lib/repositories/contracts';
+import { generateRentPeriodsForContract } from '@/lib/repositories/rentPeriods';
 import { getTenants } from '@/lib/repositories/tenants';
 import { getUnitById, updateUnit } from '@/lib/repositories/units';
 import { Tenant } from '@/types/tenant';
@@ -155,6 +156,7 @@ export default function NewContractScreen() {
 
               await createContract(db, newContract);
               await updateUnit(db, unitId, { status: 'occupied', updatedAt: now });
+              await generateRentPeriodsForContract(db, newContract);
               router.back();
             } catch (e) {
               console.error(e);
