@@ -114,7 +114,7 @@ export default function Home() {
   const availableMonths = useMemo(() => {
     const list: { year: number; month: number }[] = [];
     const base = new Date();
-    for (let i = -6; i <= 3; i++) {
+    for (let i = -12; i <= 12; i++) {
       const d = new Date(base.getFullYear(), base.getMonth() + i, 1);
       list.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
     }
