@@ -32,7 +32,7 @@ import {
   deleteCloudSnapshot, 
   CloudSnapshotMeta 
 } from '@/lib/cloudSnapshots';
-import { getActiveAlerts, RentalAlert, triggerImmediateRentNotification } from '@/lib/notifications';
+import { getActiveAlerts, RentalAlert } from '@/lib/notifications';
 import { useSQLiteContext } from 'expo-sqlite';
 
 type SettingItemProps = {
@@ -558,26 +558,8 @@ export default function SettingsScreen() {
               )}
 
               <TouchableOpacity
-                onPress={async () => {
-                  const sent = await triggerImmediateRentNotification(db);
-                  if (sent) {
-                    Alert.alert("Notification Sent", "A rent alert notification was sent to your status bar.");
-                  } else {
-                    Alert.alert(
-                      "Notification Notice",
-                      "System tray notifications are designed for production and standalone development builds (npx expo run:android). Inside Expo Go, in-app Rent Alerts and reminders remain fully active!"
-                    );
-                  }
-                }}
-                className="mt-4 bg-blue-50 py-3.5 rounded-xl items-center border border-blue-200 flex-row justify-center"
-              >
-                <Feather name="bell" size={16} color="#2563EB" style={{ marginRight: 6 }} />
-                <Text className="font-poppins-semibold text-sm text-blue-700">Test Status Bar Notification</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
                 onPress={() => setAlertsModalVisible(false)}
-                className="mt-2.5 bg-slate-100 py-3.5 rounded-xl items-center"
+                className="mt-4 bg-slate-100 py-3.5 rounded-xl items-center"
               >
                 <Text className="font-poppins-semibold text-sm text-slate-700">Dismiss</Text>
               </TouchableOpacity>
