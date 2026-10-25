@@ -26,7 +26,7 @@ export async function getHistoryEvents({
   const addQuery = (sql: string, dateCol: string) => {
     queries.push(`
       ${sql}
-      ${sql.includes('WHERE') ? 'AND' : 'WHERE'} ${dateCol} >= ? AND ${dateCol} < ?
+      ${sql.includes('WHERE') ? 'AND' : 'WHERE'} substr(${dateCol}, 1, 10) >= ? AND substr(${dateCol}, 1, 10) < ?
     `);
     args.push(startDate, endDate);
   };

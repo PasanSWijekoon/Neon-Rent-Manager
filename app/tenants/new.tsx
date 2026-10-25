@@ -29,8 +29,8 @@ export default function NewTenantScreen() {
 
     const trimmedPhone = phone.trim();
     const digitCount = trimmedPhone.replace(/\D/g, '').length;
-    if (trimmedPhone && digitCount > 10) {
-      Alert.alert('Validation Error', 'Phone number cannot exceed 10 digits.');
+    if (trimmedPhone && (digitCount < 9 || digitCount > 15)) {
+      Alert.alert('Validation Error', 'Please enter a valid phone number (e.g., 0771234567 or +94771234567).');
       return;
     }
 

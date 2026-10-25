@@ -31,6 +31,7 @@ export default function NewContractScreen() {
   const [endDate, setEndDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [rent, setRent] = useState('');
+  const [deposit, setDeposit] = useState('');
   const [notes, setNotes] = useState('');
 
   const [tenantSearch, setTenantSearch] = useState('');
@@ -139,6 +140,7 @@ export default function NewContractScreen() {
 
               const now = new Date().toISOString();
               const dueDayNum = parseInt(dueDate.split('-')[2], 10);
+              const depositNum = deposit ? parseInt(deposit.replace(/\D/g, ''), 10) : 0;
               const newContract: Contract = {
                 id: Math.random().toString(36).substring(2, 10) + Date.now().toString(36),
                 unitId,
@@ -147,7 +149,7 @@ export default function NewContractScreen() {
                 endDate,
                 monthlyRent: rentNum,
                 dueDay: dueDayNum,
-                deposit: 0,
+                deposit: isNaN(depositNum) ? 0 : depositNum,
                 status: 'active',
                 notes: notes.trim() || null,
                 createdAt: now,
@@ -279,6 +281,21 @@ export default function NewContractScreen() {
               keyboardType="number-pad"
               value={rent}
               onChangeText={setRent}
+            />
+          </View>
+        </View>
+
+        <View className="mb-6">
+          <Text className="font-poppins-medium text-sm text-[#1E293B] mb-2">Security Deposit (LKR)</Text>
+          <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4 h-14">
+            <Text className="font-poppins-semibold text-slate-400 mr-2">Rs.</Text>
+            <TextInput style={{ textAlignVertical: 'center', marginTop: Platform.OS === 'android' ? 4 : 0 }}
+              className="flex-1 font-poppins-semibold text-[#1E293B] py-0"
+              placeholder="e.g. 30000"
+              placeholderTextColor="#94A3B8"
+              keyboardType="number-pad"
+              value={deposit}
+              onChangeText={setDeposit}
             />
           </View>
         </View>

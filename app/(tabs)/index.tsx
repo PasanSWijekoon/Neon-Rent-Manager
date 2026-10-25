@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions } from 'react-native';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { ScrollView, View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -107,8 +107,20 @@ export default function Home() {
   const { user, isNewLogin, setIsNewLogin, profileLastUpdated } = useAuthStore();
 
   const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth() + 1; // 1-indexed
+  const [selectedYear, setSelectedYear] = useState(today.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1);
+  const [isMonthModalVisible, setIsMonthModalVisible] = useState(false);
+
+  const availableMonths = useMemo(() => {
+    const list: { year: number; month: number }[] = [];
+    const base = new Date();
+    for (let i = -6; i <= 3; i++) {
+      const d = new Date(base.getFullYear(), base.getMonth() + i, 1);
+      list.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
+    }
+    return list;
+  }, []);
+
 
   const {
     totalCollected,
@@ -122,7 +134,7 @@ export default function Home() {
     thisMonthDue,
     recentPayments,
     refresh
-  } = useDashboard(currentYear, currentMonth);
+  } = useDashboard(selectedYear, selectedMonth);
 
   useFocusEffect(
     useCallback(() => {
@@ -154,7 +166,7 @@ export default function Home() {
               Here's your rental overview for
             </Text>
             <Text className="text-primary font-poppins-semibold text-[15px] mt-0.5">
-              {getMonthName(currentMonth)} {currentYear}
+              {getMonthName(selectedMonth)} {selectedYear}
             </Text>
           </View>
           <View className="flex-row items-center ml-4">
@@ -218,9 +230,12 @@ export default function Home() {
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity className="bg-[#1E3A8A]/80 rounded-lg px-2.5 py-1.5 flex-row items-center border border-white/10 mt-1">
+              <TouchableOpacity 
+                onPress={() => setIsMonthModalVisible(true)}
+                className="bg-[#1E3A8A]/80 rounded-lg px-2.5 py-1.5 flex-row items-center border border-white/10 mt-1 active:opacity-75"
+              >
                 <Feather name="calendar" size={12} color="#FFFFFF" />
-                <Text className="text-white font-poppins-medium text-[10px] ml-1.5 mr-1">{getMonthName(currentMonth).substring(0,3)} {currentYear}</Text>
+                <Text className="text-white font-poppins-medium text-[10px] ml-1.5 mr-1">{getMonthName(selectedMonth).substring(0,3)} {selectedYear}</Text>
                 <Feather name="chevron-down" size={12} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
@@ -406,6 +421,55 @@ export default function Home() {
         )}
 
       </ScrollView>
+
+      <Modal visible={isMonthModalVisible} transparent animationType="fade">
+        <View className="flex-1 bg-black/50 justify-center items-center px-4">
+          <View className="bg-white w-full rounded-3xl p-6 shadow-xl max-w-sm">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="font-poppins-bold text-lg text-[#1E293B]">Select Month</Text>
+              <TouchableOpacity onPress={() => setIsMonthModalVisible(false)} className="p-1">
+                <Feather name="x" size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={{ maxHeight: 300 }} showsVerticalScrollIndicator={false}>
+              {availableMonths.map(m => {
+                const label = `${getMonthName(m.month)} ${m.year}`;
+                const isSelected = selectedYear === m.year && selectedMonth === m.month;
+                const isCurrentMonth = today.getFullYear() === m.year && today.getMonth() + 1 === m.month;
+                return (
+                  <TouchableOpacity 
+                    key={`${m.year}-${m.month}`}
+                    onPress={() => {
+                      setSelectedYear(m.year);
+                      setSelectedMonth(m.month);
+                      setIsMonthModalVisible(false);
+                    }}
+                    className={`flex-row justify-between items-center py-3.5 border-b border-slate-100 ${isSelected ? 'bg-blue-50/60 -mx-6 px-6' : ''}`}
+                  >
+                    <View className="flex-row items-center">
+                      <Text className={`font-poppins-medium text-base ${isSelected ? 'text-primary font-poppins-semibold' : 'text-[#1E293B]'}`}>
+                        {label}
+                      </Text>
+                      {isCurrentMonth && (
+                        <View className="ml-2 bg-blue-100 px-2 py-0.5 rounded-full">
+                          <Text className="text-blue-700 font-poppins-medium text-[10px]">Current</Text>
+                        </View>
+                      )}
+                    </View>
+                    {isSelected && <Feather name="check" size={18} color={colors.primary} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <TouchableOpacity 
+              onPress={() => setIsMonthModalVisible(false)}
+              className="mt-4 py-3 bg-slate-100 rounded-xl items-center"
+            >
+              <Text className="font-poppins-semibold text-slate-600">Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
     </View>
   );

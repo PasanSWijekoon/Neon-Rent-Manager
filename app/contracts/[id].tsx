@@ -194,6 +194,19 @@ export default function ContractDetailsScreen() {
             </View>
           </View>
 
+          <View className="flex-row mb-5 pb-5 border-b border-slate-100">
+            <View className="flex-1">
+              <Text className="font-poppins-regular text-xs text-slate-400 mb-1">Due Day</Text>
+              <Text className="font-poppins-medium text-[#1E293B]">Day {contract.dueDay} of month</Text>
+            </View>
+            <View className="flex-1 pl-4 border-l border-slate-100">
+              <Text className="font-poppins-regular text-xs text-slate-400 mb-1">Security Deposit</Text>
+              <Text className="font-poppins-semibold text-[#1E293B]">
+                LKR {(contract.deposit || 0).toLocaleString()}
+              </Text>
+            </View>
+          </View>
+
           {contract.notes && (
             <View>
               <Text className="font-poppins-regular text-xs text-slate-400 mb-1">Notes</Text>
